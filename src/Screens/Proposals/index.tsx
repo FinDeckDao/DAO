@@ -10,7 +10,7 @@ export const Proposals: FC = () => {
 
   const renderProposals = () => {
     return data.map((proposal, index) => {
-      return <div key={index} className="">
+      return <div key={index} className="p-6 bg-white rounded-lg shadow-lg mb-4">
         {proposal.id} {proposal.title} {proposal.description}
       </div>
     })
