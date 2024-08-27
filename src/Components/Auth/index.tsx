@@ -45,6 +45,7 @@ export const Auth = (props: PropsWithChildren) => {
     //       For now this is simple enough and it works fine.
     // TODO: Make this a configuration Option.
     if (pathname === '/') return
+    if (pathname === '/proposals') return
 
     // Force login for all other pages.
     if (!authState.isAuthenticated) {

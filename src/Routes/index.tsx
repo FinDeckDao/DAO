@@ -7,6 +7,7 @@ import { Home } from '../Screens/Home'
 import { Proposals } from '../Screens/Proposals'
 
 import { ProtectedContent } from "../Components/Auth/index"
+
 import {
   HomeIcon,
   NewspaperIcon,
@@ -34,6 +35,7 @@ export const router = createBrowserRouter([
     errorElement: <ErrorPage />
   },
   // Proposals screen is protected by the AuthContext.
+  // TODO: Understand why this isn't automatically protected.
   {
     path: "/proposals",
     element: (
@@ -46,3 +48,4 @@ export const router = createBrowserRouter([
     errorElement: <ErrorPage />
   }
 ])
+
