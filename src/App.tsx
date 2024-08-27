@@ -7,7 +7,7 @@ import tailwindLogo from './assets/tailwind-css-logo.png'
 
 import { useQueryCall, useUpdateCall } from '@ic-reactor/react'
 
-function App() {
+const App = () => {
   const { data: count, call: refetchCount } = useQueryCall({
     functionName: 'get',
   })
