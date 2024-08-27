@@ -1,3 +1,4 @@
+import { FC } from 'react'
 import motokoLogo from '../../assets/motoko_moving.png'
 import motokoShadowLogo from '../../assets/motoko_shadow.png'
 import reactLogo from '../../assets/react.svg'
@@ -6,7 +7,7 @@ import tailwindLogo from '../../assets/tailwind-css-logo.png'
 
 import { useQueryCall, useUpdateCall } from '@ic-reactor/react'
 
-export const Home = () => {
+export const Home: FC = () => {
   const { data: count, call: refetchCount } = useQueryCall({
     functionName: 'get',
   })
@@ -55,7 +56,7 @@ export const Home = () => {
         </div>
       </div>
 
-      <h1 className='text-red-700 text-4xl left-auto right-auto'>Motoko + Vite + React + Tailwind</h1>
+      <h1 className='text-red-700 text-4xl'>Motoko + Vite + React + Tailwind</h1>
       <div className="card">
         <button onClick={increment} disabled={loading} className='
          bg-blue-500 text-white font-bold py-2 px-4 rounded 

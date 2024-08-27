@@ -11,6 +11,7 @@ export default defineConfig({
   build: {
     outDir: '../dist',
     emptyOutDir: true,
+    target: 'ES2022',
   },
   optimizeDeps: {
     esbuildOptions: {

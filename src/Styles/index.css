@@ -21,20 +21,9 @@
 
 @tailwind components;
 @tailwind utilities;
+
 @layer utilities {
   body {
-    @apply bg-slate-900;
+    @apply bg-slate-800;
   }
-}
-
-
-/* Custom Fonts */
-@font-face {
-  font-family: 'Share Tech Mono';
-  src: url(/fonts/ShareTechMono-Regular.ttf) format('ttf');
-}
-
-html,
-body {
-  font-family: 'Share Tech Mono', monospace;
 }

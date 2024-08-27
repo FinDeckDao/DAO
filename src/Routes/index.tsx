@@ -4,6 +4,7 @@ import {
 import { DefaultLayout } from '../Layout'
 import { ErrorPage } from '../Routes/ErrorPage'
 import { Home } from '../Screens/Home'
+import { Proposals } from '../Screens/Proposals'
 
 import { ProtectedContent } from "../Components/Auth/index"
 import {
@@ -38,7 +39,7 @@ export const router = createBrowserRouter([
     element: (
       <DefaultLayout>
         <ProtectedContent>
-          <>Proposals</>
+          <Proposals />
         </ProtectedContent>
       </DefaultLayout>
     ),
