@@ -1,0 +1,32 @@
+{
+  "canisters": {
+    "backend": {
+      "type": "motoko",
+      "main": "backend/Backend.mo",
+      "declarations": {
+        "node_compatibility": true
+      }
+    },
+    "frontend": {
+      "dependencies": ["backend"],
+      "type": "assets",
+      "source": ["dist/"]
+    }
+  },
+  "defaults": {
+    "build": {
+      "packtool": "npm run --silent sources"
+    }
+  },
+  "output_env_file": ".env",
+  "version": 2,
+  "networks": {
+    "local": {
+      "bind": "127.0.0.1:8000",
+      "type": "ephemeral",
+      "replica": {
+        "subnet_type": "system"
+      }
+    }
+  }
+}
