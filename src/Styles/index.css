@@ -1,0 +1,40 @@
+@tailwind base;
+/* Customize the Base */
+@layer base {
+  h1 {
+    @apply text-2xl transform-none mb-10;
+  }
+  h2 {
+    @apply text-xl transform-none mb-8;
+  }
+  h3 {
+    @apply text-lg transform-none mb-4 text-left;
+  }
+  html,
+  body {
+    @apply p-0 m-0;
+  }
+  p {
+    @apply mb-4 transform-none;
+  }
+}
+
+@tailwind components;
+@tailwind utilities;
+@layer utilities {
+  body {
+    @apply bg-slate-900;
+  }
+}
+
+
+/* Custom Fonts */
+@font-face {
+  font-family: 'Share Tech Mono';
+  src: url(/fonts/ShareTechMono-Regular.ttf) format('ttf');
+}
+
+html,
+body {
+  font-family: 'Share Tech Mono', monospace;
+}
