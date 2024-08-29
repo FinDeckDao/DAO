@@ -5,19 +5,20 @@ import reactLogo from '../../assets/react.svg'
 import viteLogo from '../../assets/vite.svg'
 import tailwindLogo from '../../assets/tailwind-css-logo.png'
 
-import { useQueryCall, useUpdateCall } from '@ic-reactor/react'
+// TODO: Keep this here for reference later. This is simpler than using the declarations.
+// import { useQueryCall, useUpdateCall } from '@ic-reactor/react'
 
 export const Home: FC = () => {
-  const { data: count, call: refetchCount } = useQueryCall({
-    functionName: 'get',
-  })
+  // const { data: count, call: refetchCount } = useQueryCall({
+  //   functionName: 'get',
+  // })
 
-  const { call: increment, loading } = useUpdateCall({
-    functionName: 'inc',
-    onSuccess: () => {
-      refetchCount()
-    },
-  })
+  // const { call: increment, loading } = useUpdateCall({
+  //   functionName: 'inc',
+  //   onSuccess: () => {
+  //     refetchCount()
+  //   },
+  // })
 
   return (
     <div className="App">
@@ -56,22 +57,18 @@ export const Home: FC = () => {
         </div>
       </div>
 
-      <h1 className='text-red-700 text-4xl'>Motoko + Vite + React + Tailwind</h1>
-      <div className="card">
-        <button onClick={increment} disabled={loading} className='
-         bg-blue-500 text-white font-bold py-2 px-4 rounded 
-         hover:bg-blue-700 border-2 border-blue-500 mb-8
-         disabled:bg-gray-400 disabled:cursor-not-allowed disabled:opacity-50'
-        >
-          count is {count?.toString() ?? 'loading...'}
-        </button>
+      <div className="container mx-auto w-6/12">
+        <h1 className='text-red-700 text-4xl'>FinDeckDAO</h1>
         <p>
-          Edit <code>backend/Backend.mo</code> and save to test HMR
+          The FindeckDAO is "Decentralized Autaunomous Organization" builds Decision Support Systems on the Internet Computer.
+          We create "Decision Support Systems" to help people handle problems in an increasingly complex world.
+        </p>
+        <p>
+          Our first project is FinDeck.io which is a decision support system for people who trade assets like Digital Assets
+          (like Tokenized Assets or NFTs), Crypto Currencies, Stocks, Bonds, Precious Metals.
         </p>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite, React, and Motoko logos to learn more
-      </p>
+
     </div >
   )
 }

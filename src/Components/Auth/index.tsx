@@ -20,6 +20,8 @@ export const Auth = (props: PropsWithChildren) => {
 
       // 8 hours in nanoseconds
       maxTimeToLive: BigInt(28800000000000),
+      // TODO: This should change based on the environment.
+      identityProvider: "http://be2us-64aaa-aaaaa-qaabq-cai.localhost:8000/",
       onSuccess: async () => {
         // Client library will check if the user is authenticated
         const authenticated = await authClient.isAuthenticated()

@@ -38,4 +38,9 @@ export default defineConfig({
     setupFiles: 'setupTests.ts',
     cache: { dir: '../node_modules/.vitest' },
   },
+  resolve: {
+    alias: {
+      '@': '/src',
+    },
+  },
 });
