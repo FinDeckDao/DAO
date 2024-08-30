@@ -7,12 +7,18 @@ import {
 } from '../../declarations/backend/backend.did'
 import { idlFactory } from '../../declarations/backend/index'
 import { Principal } from '@dfinity/principal'
-import { PlusCircleIcon } from "@heroicons/react/24/outline"
+import { CreateButton } from '../../Components/Buttons'
+import { useNavigate } from 'react-router-dom'
 
 export const Proposals: FC = () => {
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<String | null>(null)
+  const navigate = useNavigate()
+
+  const navigateToCreateProposal = () => {
+    navigate('/proposals/create') // Use navigate function
+  }
 
   useEffect(() => {
     const fetchProposals = async () => {
@@ -72,10 +78,7 @@ export const Proposals: FC = () => {
 
   const renderAddProposalButton = () => {
     return <div className='w-full flex justify-end p-4'>
-      <button className="btn btn-primary bg-slate-800 btn-outline flex items-center">
-        <PlusCircleIcon className="h-6 w-6" />
-        <span>Proposal</span>
-      </button>
+      <CreateButton onClick={navigateToCreateProposal} classOverrides='bg-slate-800' />
     </div>
   }
 

@@ -17,15 +17,16 @@ export const DefaultLayout = (props: LayoutProps) => {
     content,
     children
   } = props
-  return <Auth>
-    <div className='bg-neutral'>
-      {navBarOverride || <NavBar />}
-      {/* {sidePanelOverride || <SidePanel />} */}
-      <Content>{children || content}</Content>
-      <Footer />
-    </div>
-  </Auth>
-
+  return (
+    <Auth>
+      <div className='bg-neutral'>
+        {navBarOverride || <NavBar />}
+        {/* {sidePanelOverride || <SidePanel />} */}
+        <Content>{children || content}</Content>
+        <Footer />
+      </div>
+    </Auth>
+  )
 }
 
 export default DefaultLayout

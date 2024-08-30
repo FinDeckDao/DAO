@@ -4,11 +4,17 @@ import motokoShadowLogo from '../../assets/motoko_shadow.png'
 import reactLogo from '../../assets/react.svg'
 import viteLogo from '../../assets/vite.svg'
 import tailwindLogo from '../../assets/tailwind-css-logo.png'
+import { CtaButton } from '../../Components/Buttons'
+import { useNavigate } from 'react-router-dom'
 
 // TODO: Keep this here for reference later. This is simpler than using the declarations.
 // import { useQueryCall, useUpdateCall } from '@ic-reactor/react'
 
 export const Home: FC = () => {
+  const navigate = useNavigate()
+  const navigateToMembership = () => {
+    navigate('/member/new') // Use navigate function
+  }
   // const { data: count, call: refetchCount } = useQueryCall({
   //   functionName: 'get',
   // })
@@ -67,7 +73,10 @@ export const Home: FC = () => {
           Our first project is FinDeck.io which is a decision support system for people who trade assets like Digital Assets
           (like Tokenized Assets or NFTs), Crypto Currencies, Stocks, Bonds, Precious Metals.
         </p>
+
+        <CtaButton cta="Get Started" onClick={navigateToMembership} classOverrides='mx-auto' />
       </div>
+
 
     </div >
   )

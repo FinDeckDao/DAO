@@ -8,7 +8,7 @@
     "build": "tsc && vite build",
     "dfx": "dfx start --clean --host 127.0.0.1:8000",
     "format": "prettier --write \"src/**/*.{json,js,jsx,ts,tsx,css,scss}\" \"backend/**/*.mo\"",
-    "frontend": "VITE_CANISTER_ORIGIN=http://$(dfx canister id frontend).localhost:3000 vite --port 3000",
+    "frontend": "vite --port 3000",
     "postinstall": "mops install",
     "setup": "npm i && dfx canister create backend && dfx generate backend && dfx deploy",
     "sources": "mops sources",
