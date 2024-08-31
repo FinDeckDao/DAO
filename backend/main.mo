@@ -9,7 +9,7 @@ import WebpageManager "modules/WebpageManager/main";
 actor {
   stable var manifesto : Text = "Help new traders to become profitable and understand key concepts that increase the probability of trading and investing profitably.";
   stable var goals : [Text] = ["Learn Motoko", "Build a project", "Graduate!"];
-  stable var memberEntries : [(Principal, Types.Member)] = [];
+  stable var memberEntries : [(Principal, Types.Member)] = []; // Text is the Principal.toText() of the Principal
   stable var proposalEntries : [(Types.ProposalId, Types.Proposal)] = [];
 
   ////////////////////////////////////////////////////////////////////////
@@ -17,6 +17,7 @@ actor {
   ////////////////////////////////////////////////////////////////////////
   let webpageManager = WebpageManager.createDefault();
 
+  // ✅ public query func getIdWebpage() : async Principal
   public query func getIdWebpage() : async Principal {
     webpageManager.getIdWebpage();
   };
@@ -24,18 +25,26 @@ actor {
   ////////////////////////////////////////////////////////////////////////
   // Section DAO /////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////
+
+  // Returns the name of the DAO
+  // ✅ public query func getName() : async Text
   public query func getName() : async Text {
     DAOManager.getName();
   };
 
+  // Returns the manifesto of the DAO
+  // ✅ public query func getManifesto() : async Text
   public query func getManifesto() : async Text {
     manifesto;
   };
 
+  // Returns the goals of the DAO
+  // ✅ public query func getGoals() : async [Text]
   public query func getGoals() : async [Text] {
     goals;
   };
 
+  // ✅ Might not be needed for graduation project
   public func addGoal(goal : Text) : async Result.Result<(), Text> {
     let (newGoals, result) = DAOManager.addGoal(goals, goal);
     goals := newGoals;
@@ -45,12 +54,15 @@ actor {
   ////////////////////////////////////////////////////////////////////////
   // Section Members /////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////
+  // ✅ public shared ({ caller }) func registerMember(member : Member) : async Result<(), Text>
   public shared ({ caller }) func registerMember(member : Types.Member) : async Result.Result<(), Text> {
     let (newEntries, result) = MemberManager.registerMember(memberEntries, member, caller);
     memberEntries := newEntries;
     result;
   };
 
+
+  // ✅ public query func getMember(p : Principal) : async Result<Member, Text>
   public query func getMember(p : Principal) : async Result.Result<Types.Member, Text> {
     MemberManager.getMember(memberEntries, p);
   };
@@ -63,6 +75,7 @@ actor {
     MemberManager.numberOfMembers(memberEntries);
   };
 
+  // ✅ public shared ({ caller }) func graduate(student : Principal) : async Result<(), Text>  
   public shared ({ caller }) func graduate(student : Principal) : async Result.Result<(), Text> {
     let (newEntries, result) = await MemberManager.graduate(memberEntries, student, caller);
     memberEntries := newEntries;
@@ -72,20 +85,24 @@ actor {
   ////////////////////////////////////////////////////////////////////////
   // Section Proposals ///////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////
+  // ✅ public shared ({ caller }) func createProposal(content : ProposalContent) : async Result<ProposalId, Text>
   public shared ({ caller }) func createProposal(content : Types.ProposalContent) : async Result.Result<Types.ProposalId, Text> {
     let (newEntries, result) = ProposalManager.createProposal(proposalEntries, content, caller);
     proposalEntries := newEntries;
     result;
   };
 
+  // ✅ public query func getProposal(id : ProposalId) : async Result<Proposal, Text>
   public query func getProposal(id : Types.ProposalId) : async Result.Result<Types.Proposal, Text> {
     ProposalManager.getProposal(proposalEntries, id);
   };
 
+  // ✅ public query func getAllProposal() : async [Proposal]
   public query func getAllProposals() : async [Types.Proposal] {
     ProposalManager.getAllProposals(proposalEntries);
   };
 
+  // ✅ public shared ({ caller }) func voteProposal(proposalId : ProposalId, yesOrNo : Bool) : async Result<(), Text>
   public shared ({ caller }) func voteProposal(proposalId : Types.ProposalId, yesOrNo : Bool) : async Result.Result<(), Text> {
     let (newEntries, result) = ProposalManager.voteProposal(proposalEntries, proposalId, yesOrNo, caller);
     proposalEntries := newEntries;

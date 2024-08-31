@@ -4,23 +4,24 @@ import { Member } from '../../declarations/backend/backend.did'
 import { useQueryCall } from '@ic-reactor/react'
 import { Principal } from '@dfinity/principal'
 import { hasKey } from '../../utils'
+import { CtaButton } from '../../Components/Buttons'
+import { useNavigate } from 'react-router-dom'
 
 export const UserProfile: React.FC = () => {
   const auth = useContext(AuthContext)
   const [member, setMember] = useState<Member | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  // Guard for unauthenticated users.
-  if (!auth.isAuthenticated) {
-    return <div className="text-center py-4">Please log in to view your profile.</div>
+  const navigate = useNavigate()
+  const navigateToMembership = () => {
+    navigate('/members/new') // Use navigate function
   }
+
   // Use the useUpdateCall hook to call the registerMember function.
   // Note: useUpdateCall also outputs the loading state.
   const { call: getMember } = useQueryCall({
     functionName: 'getMember',
     onSuccess: (result) => {
-      console.log('getMember result:', result)
       // If the key 'ok' exists in the result, set the member state.
       if (hasKey(result, 'ok')) {
         const memberData: Member = JSON.parse(JSON.stringify(result.ok))
@@ -36,24 +37,52 @@ export const UserProfile: React.FC = () => {
     },
   })
 
+  // There are 2 reasons the profile won't show up.
+  // 1. The user is not authenticated.
+  // 2. The user is authenticated but not a member.
+
   useEffect(() => {
+    // Set the loading state to true.
     setIsLoading(true)
+
     const fetchMemberData = async () => {
-      const principal = Principal.fromText(auth.identity?.toString() || '')
+      // Construct a Principal object from the identity string.
+      const principal: Principal = Principal.fromText(auth.identity)
+
+      // Guard for missing principal.
+      if (!principal) { return }
+
+      // Call the getMember function with the principal.
       await getMember([principal])
+
       // Change the loading state to false.
       setIsLoading(false)
     }
 
+    // Call the fetchMemberData function.
     fetchMemberData()
   }, [auth.isAuthenticated, auth.identity])
+
+  // Guard for missing auth.identity.
+  if (!auth.identity) {
+    return <div className="text-center py-4">
+      You need to log into first and register as a member to view your profile.
+    </div>
+  }
 
   if (isLoading) {
     return <div className="text-center py-4">Loading profile...</div>
   }
 
   if (error) {
-    return <div className="text-center py-4 text-red-500">Error: {error}</div>
+    return <div className="text-center py-4">
+      <h1>It looks like you're not a member of the Dao.</h1>
+      <p>
+        To get started please register as a member.
+      </p>
+      <p>{error}</p>
+      <CtaButton cta="Get Started" onClick={navigateToMembership} classOverrides='mx-auto' />
+    </div>
   }
 
   if (!member) {
@@ -71,7 +100,7 @@ export const UserProfile: React.FC = () => {
           {/* <span className="font-semibold">Role:</span> {member ? Object.keys(member.role)[0] : null} */}
         </p>
         <p>
-          <span className="font-semibold">Principal ID:</span>{" "}
+          <span className="font-semibold">Identity:</span>{" "}
           <span className="break-all">
             {auth.identity ? `${auth.identity}` : null}
           </span>

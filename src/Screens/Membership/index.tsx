@@ -5,6 +5,7 @@ import { useUpdateCall, useQueryCall } from '@ic-reactor/react'
 import { useNavigate } from 'react-router-dom'
 import { hasKey } from '../../utils'
 import { Principal } from '@dfinity/principal'
+import { CtaButton } from '../../Components/Buttons'
 
 const NewMember: React.FC = () => {
   const auth = React.useContext(AuthContext)
@@ -12,7 +13,14 @@ const NewMember: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [feedback, setFeedback] = useState('')
   const [member, setMember] = useState<Member | null>(null)
-  const [error, setError] = useState<string | null>(null)
+
+
+  // Guard for missing auth.identity.
+  if (!auth.identity) {
+    return <div className="text-center py-4">
+      You need to log into first to become a member.
+    </div>
+  }
 
   // Redirect to the profile page after adding a new member.
   const navigate = useNavigate()
@@ -42,8 +50,9 @@ const NewMember: React.FC = () => {
         return
       }
 
+      // If the member doesn't exist do nothing.
       if (hasKey(result, 'err')) {
-        setError(result.err as string)
+        console.log('Error:', result.err)
         return
       }
     },
@@ -55,8 +64,8 @@ const NewMember: React.FC = () => {
 
     // Fetch the member data.
     const queryMember = async () => {
-      const principal = Principal.fromText(auth.identity)
-      console.log(`Principal: ${principal}`)
+      // Construct a Principal object from the identity string.
+      const principal: Principal = Principal.fromText(auth.identity)
       await getMember([principal])
     }
     queryMember()
@@ -98,8 +107,18 @@ const NewMember: React.FC = () => {
 
   // Guard for existing member.
   if (member) {
-    return <div className="text-center py-4">
-      You are already a member. We current don't have a mechanism to remove members.
+    return <div className="shadow-md rounded-lg p-6 mx-auto max-w-2xl bg-slate-800">
+      <h1>Looks like you're already a registered member.</h1>
+      <p>
+        Currently, we don't have a mechanism to remove or update members.
+      </p>
+      <p className="mb-8">
+        In the future, we will have a way to remove or update your membership details from your profile.
+      </p>
+      <CtaButton
+        onClick={redirectToProfile}
+        cta="Go to Profile"
+      />
     </div>
   }
 

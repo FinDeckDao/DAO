@@ -2,6 +2,8 @@ import Array "mo:base/Array";
 import Buffer "mo:base/Buffer";
 import Principal "mo:base/Principal";
 import Result "mo:base/Result";
+import Nat "mo:base/Nat";
+import Text "mo:base/Text";
 import Types "../../types";
 
 module {
@@ -10,7 +12,7 @@ module {
 
     switch (Buffer.indexOf<(Principal, Types.Member)>((caller, member), membersBuffer, func((p1, _), (p2, _)) = p1 == p2)) {
       case null {
-        // Force the role to Studend regardless of what was passed in.
+        // Force the role to Student regardless of what was passed in.
         let newMember = (caller, { name = member.name; role = #Student });
         membersBuffer.add(newMember);
         (Buffer.toArray(membersBuffer), #ok());
@@ -20,7 +22,16 @@ module {
   };
 
   public func getMember(members : [(Principal, Types.Member)], p : Principal) : Result.Result<Types.Member, Text> {
-    switch (Array.find<(Principal, Types.Member)>(members, func((principal, _)) = principal == p)) {
+    // Create a result variable to hold the result of the search.
+    let result = Array.find<(Principal, Types.Member)>(
+      members,
+      func((principal, _)) {
+        principal == p;
+      },
+    );
+
+    // Make sure the compairson is done on the long version of both the input Principla and the Principals in the array.
+    switch (result) {
       case (null) #err("Member does not exist");
       case (?(_, member)) #ok(member);
     };

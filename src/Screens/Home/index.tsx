@@ -7,24 +7,11 @@ import tailwindLogo from '../../assets/tailwind-css-logo.png'
 import { CtaButton } from '../../Components/Buttons'
 import { useNavigate } from 'react-router-dom'
 
-// TODO: Keep this here for reference later. This is simpler than using the declarations.
-// import { useQueryCall, useUpdateCall } from '@ic-reactor/react'
-
 export const Home: FC = () => {
   const navigate = useNavigate()
   const navigateToMembership = () => {
-    navigate('/member/new') // Use navigate function
+    navigate('/members/new') // Use navigate function
   }
-  // const { data: count, call: refetchCount } = useQueryCall({
-  //   functionName: 'get',
-  // })
-
-  // const { call: increment, loading } = useUpdateCall({
-  //   functionName: 'inc',
-  //   onSuccess: () => {
-  //     refetchCount()
-  //   },
-  // })
 
   return (
     <div className="App">
