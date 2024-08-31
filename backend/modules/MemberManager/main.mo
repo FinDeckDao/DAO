@@ -10,11 +10,12 @@ module {
 
     switch (Buffer.indexOf<(Principal, Types.Member)>((caller, member), membersBuffer, func((p1, _), (p2, _)) = p1 == p2)) {
       case null {
+        // Force the role to Studend regardless of what was passed in.
         let newMember = (caller, { name = member.name; role = #Student });
         membersBuffer.add(newMember);
         (Buffer.toArray(membersBuffer), #ok());
       };
-      case (?_) (members, #err("Member already exists"));
+      case (?_) (members, #err("Member by this name already exists."));
     };
   };
 

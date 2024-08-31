@@ -1,57 +1,54 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { Actor, HttpAgent } from "@dfinity/agent"
 import { AuthContext } from '../../Contexts/Auth'
-import { Member, Role, _SERVICE } from '../../declarations/backend/backend.did'
-import { idlFactory } from '../../declarations/backend'
+import { Member } from '../../declarations/backend/backend.did'
+import { useQueryCall } from '@ic-reactor/react'
 import { Principal } from '@dfinity/principal'
-
-const roleToString = (role: Role): string => {
-  if ('Graduate' in role) return 'Graduate'
-  if ('Mentor' in role) return 'Mentor'
-  if ('Student' in role) return 'Student'
-  return 'Unknown'
-}
+import { hasKey } from '../../utils'
 
 export const UserProfile: React.FC = () => {
   const auth = useContext(AuthContext)
   const [member, setMember] = useState<Member | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    const fetchMemberData = async () => {
-      if (auth.isAuthenticated && auth.identity) {
-        try {
-          setLoading(true)
-          const agent = new HttpAgent()
-          const principal = Principal.fromText(auth.identity)
-          const actor = Actor.createActor<_SERVICE>(idlFactory, {
-            agent,
-            canisterId: process.env.CANISTER_ID_BACKEND || "",
-          })
-          const result = await actor.getMember(principal)
-
-          if ('ok' in result) {
-            setMember(result.ok)
-          } else {
-            setError(result.err)
-          }
-        } catch (err) {
-          setError('Failed to fetch member data')
-        } finally {
-          setLoading(false)
-        }
+  // Guard for unauthenticated users.
+  if (!auth.isAuthenticated) {
+    return <div className="text-center py-4">Please log in to view your profile.</div>
+  }
+  // Use the useUpdateCall hook to call the registerMember function.
+  // Note: useUpdateCall also outputs the loading state.
+  const { call: getMember } = useQueryCall({
+    functionName: 'getMember',
+    onSuccess: (result) => {
+      console.log('getMember result:', result)
+      // If the key 'ok' exists in the result, set the member state.
+      if (hasKey(result, 'ok')) {
+        const memberData: Member = JSON.parse(JSON.stringify(result.ok))
+        setMember(memberData)
+        setError(null)
+        return
       }
+
+      if (hasKey(result, 'err')) {
+        setError(result.err as string)
+        return
+      }
+    },
+  })
+
+  useEffect(() => {
+    setIsLoading(true)
+    const fetchMemberData = async () => {
+      const principal = Principal.fromText(auth.identity?.toString() || '')
+      await getMember([principal])
+      // Change the loading state to false.
+      setIsLoading(false)
     }
 
     fetchMemberData()
   }, [auth.isAuthenticated, auth.identity])
 
-  if (!auth.isAuthenticated) {
-    return <div className="text-center py-4">Please log in to view your profile.</div>
-  }
-
-  if (loading) {
+  if (isLoading) {
     return <div className="text-center py-4">Loading profile...</div>
   }
 
@@ -64,19 +61,19 @@ export const UserProfile: React.FC = () => {
   }
 
   return (
-    <div className="bg-white shadow-md rounded-lg p-6 max-w-sm mx-auto">
-      <h2 className="text-2xl font-bold mb-4 text-gray-800">User Profile</h2>
+    <div className="shadow-md rounded-lg p-6 mx-auto max-w-2xl bg-slate-800">
+      <h2 className="text-2xl font-bold mb-4">User Profile</h2>
       <div className="space-y-3">
-        <p className="text-gray-600">
+        <p>
           <span className="font-semibold">Name:</span> {member.name}
         </p>
         <p className="text-gray-600">
-          <span className="font-semibold">Role:</span> {roleToString(member.role)}
+          {/* <span className="font-semibold">Role:</span> {member ? Object.keys(member.role)[0] : null} */}
         </p>
-        <p className="text-gray-600">
-          <span className="font-semibold">Principal ID:</span>
+        <p>
+          <span className="font-semibold">Principal ID:</span>{" "}
           <span className="break-all">
-            {auth.identity ? `${auth.identity.toString().slice(0, 6)}...${auth.identity.toString().slice(-4)}` : 'N/A'}
+            {auth.identity ? `${auth.identity}` : null}
           </span>
         </p>
       </div>

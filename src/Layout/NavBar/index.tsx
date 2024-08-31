@@ -16,7 +16,7 @@ export const NavBar = () => {
     // Guard for unauthenticated user.
     if (!auth.isAuthenticated) {
       return <Link
-        to="/dashboard"
+        to="/profile"
         className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-sky-100 hover:bg-slate-700"
       >
         <img src={iclogo} className="h-8 w-8 inline p-0 mb-1 mr-2 align-middle" />
