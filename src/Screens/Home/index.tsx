@@ -59,8 +59,8 @@ export const Home: FC = () => {
       <h1 className='text-red-700 text-4xl'>Motoko + Vite + React + Tailwind</h1>
       <div className="card">
         <button onClick={increment} disabled={loading} className='
-         bg-blue-500 text-white font-bold py-2 px-4 rounded 
-         hover:bg-blue-700 border-2 border-blue-500 mb-8
+         bg-[#6D63C1] text-white font-bold py-2 px-4 rounded 
+         hover:bg-[#6D63C1] border-2 border-[#6D63C1] mb-8
          disabled:bg-gray-400 disabled:cursor-not-allowed disabled:opacity-50'
         >
           count is {count?.toString() ?? 'loading...'}
