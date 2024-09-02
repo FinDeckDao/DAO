@@ -1,36 +1,51 @@
-import { useContext, useState } from "react"
-import { AuthContext } from "../../Contexts/Auth"
-import { Dialog } from '@headlessui/react'
+import {
+  useState
+} from "react"
+import { Dialog, DialogPanel } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import { Link } from "react-router-dom"
 import iclogo from '../../assets/internet-computer-icp-logo.svg'
-import { AuthContextType } from "../../Contexts/Auth/defaultContext"
-import { logOut } from "../../Components/Auth/authClient"
 import { navigation } from "../../Routes"
+import { useAuth, useAgent } from "@ic-reactor/react"
 
 export const NavBar = () => {
-  const auth = useContext(AuthContext)
+  const { login, logout, authenticated, identity, loginError } = useAuth({
+    onLoginSuccess: (principal) => console.log(`Logged in as ${principal}`),
+    onLoginError: (error) => console.error(`Login failed: ${error}`),
+  })
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const agent = useAgent()
 
-  const getLoginButton = (auth: AuthContextType) => {
-    // Guard for unauthenticated user.
-    if (!auth.isAuthenticated) {
-      return <Link
-        to="/profile"
-        className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-sky-100 hover:bg-slate-700"
+  const getLoginButton = () => {
+    // Guard for unauthenticated user or login error
+    if (!authenticated || !identity || loginError) {
+      return <div
+        onClick={(e) => {
+          e.preventDefault()
+          // Login with II on the IC default
+          // or with the local environment
+          login({
+            identityProvider: agent?.isLocal()
+              ? 'http://be2us-64aaa-aaaaa-qaabq-cai.localhost:8000/#authorize'
+              : 'https://identity.ic0.app/#authorize'
+          })
+        }}
+        className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7
+                   text-sky-100 hover:bg-slate-700"
       >
         <img src={iclogo} className="h-8 w-8 inline p-0 mb-1 mr-2 align-middle" />
         Login
-      </Link>
+      </div>
     }
 
     return <a
       href="/"
-      className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-sky-100 hover:bg-slate-700"
-      onClick={() => { logOut() }}
+      className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7
+                 text-sky-100 hover:bg-slate-700"
+      onClick={() => { logout() }}
     >
       <img src={iclogo} className="h-8 w-8 inline p-0 mb-1 mr-2 align-middle" />
-      Logout ({auth.identity.slice(0, 6)}...{auth.identity.slice(-4)})
+      Logout ({identity?.toString().slice(0, 6)}...{identity?.toString().slice(-4)})
     </a>
   }
 
@@ -64,13 +79,14 @@ export const NavBar = () => {
         ))}
       </div>
       <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-        {getLoginButton(auth)}
+
+        {getLoginButton()}
       </div>
     </nav>
     {/* Mobile Menu */}
     <Dialog as="div" className="lg:hidden" open={mobileMenuOpen} onClose={setMobileMenuOpen}>
       <div className="fixed inset-0 z-10" />
-      <Dialog.Panel className="fixed inset-y-0 right-0 z-10 w-full overflow-y-auto bg-slate-800 px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
+      <DialogPanel className="fixed inset-y-0 right-0 z-10 w-full overflow-y-auto bg-slate-800 px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
         <div className="flex items-center justify-between">
           <Link to="#" className="text-sky-100 font-bold">FinDeck.io</Link>
           <button
@@ -97,11 +113,11 @@ export const NavBar = () => {
               ))}
             </div>
             <div className="py-6">
-              {getLoginButton(auth)}
+              {/* {getLoginButton()} */}
             </div>
           </div>
         </div>
-      </Dialog.Panel>
+      </DialogPanel>
     </Dialog>
   </header >
 }

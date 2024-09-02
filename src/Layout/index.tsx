@@ -1,7 +1,6 @@
 import { Content } from "./Content"
 import { Footer } from "./Footer"
 import { NavBar } from "./NavBar"
-import { Auth } from "../Components/Auth"
 
 interface LayoutProps {
   navBarOverride?: JSX.Element
@@ -18,14 +17,12 @@ export const DefaultLayout = (props: LayoutProps) => {
     children
   } = props
   return (
-    <Auth>
-      <div className='bg-neutral'>
-        {navBarOverride || <NavBar />}
-        {/* {sidePanelOverride || <SidePanel />} */}
-        <Content>{children || content}</Content>
-        <Footer />
-      </div>
-    </Auth>
+    <div className='bg-neutral'>
+      {navBarOverride || <NavBar />}
+      {/* {sidePanelOverride || <SidePanel />} */}
+      <Content>{children || content}</Content>
+      <Footer />
+    </div>
   )
 }
 

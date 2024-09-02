@@ -1,14 +1,16 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { AuthContext } from '../../Contexts/Auth'
+import React, { useEffect, useState } from 'react'
 import { Member } from '../../declarations/backend/backend.did'
 import { useQueryCall } from '@ic-reactor/react'
 import { Principal } from '@dfinity/principal'
 import { hasKey } from '../../utils'
 import { CtaButton } from '../../Components/Buttons'
 import { useNavigate } from 'react-router-dom'
+import { useAuthState, useUserPrincipal } from '@ic-reactor/react'
 
 export const UserProfile: React.FC = () => {
-  const auth = useContext(AuthContext)
+  const { identity } = useAuthState()
+  // Construct a Principal object from the identity string.
+  const principal: Principal | undefined = useUserPrincipal()
   const [member, setMember] = useState<Member | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -46,9 +48,6 @@ export const UserProfile: React.FC = () => {
     setIsLoading(true)
 
     const fetchMemberData = async () => {
-      // Construct a Principal object from the identity string.
-      const principal: Principal = Principal.fromText(auth.identity)
-
       // Guard for missing principal.
       if (!principal) { return }
 
@@ -61,10 +60,10 @@ export const UserProfile: React.FC = () => {
 
     // Call the fetchMemberData function.
     fetchMemberData()
-  }, [auth.isAuthenticated, auth.identity])
+  }, [principal])
 
   // Guard for missing auth.identity.
-  if (!auth.identity) {
+  if (!identity) {
     return <div className="text-center py-4">
       You need to log into first and register as a member to view your profile.
     </div>
@@ -102,7 +101,7 @@ export const UserProfile: React.FC = () => {
         <p>
           <span className="font-semibold">Identity:</span>{" "}
           <span className="break-all">
-            {auth.identity ? `${auth.identity}` : null}
+            {identity ? `${identity.toString()}` : null}
           </span>
         </p>
       </div>

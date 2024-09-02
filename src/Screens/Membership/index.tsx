@@ -1,26 +1,39 @@
 import React, { useState, useEffect } from 'react'
 import { Member } from '../../declarations/backend/backend.did'
-import AuthContext from '../../Contexts/Auth'
-import { useUpdateCall, useQueryCall } from '@ic-reactor/react'
+// import AuthContext from '../../Contexts/Auth'
+import { useQueryCall, useUpdateCall } from '@ic-reactor/react'
 import { useNavigate } from 'react-router-dom'
 import { hasKey } from '../../utils'
-import { Principal } from '@dfinity/principal'
+// import { Principal } from '@dfinity/principal'
 import { CtaButton } from '../../Components/Buttons'
+import { useAuthState, useUserPrincipal } from '@ic-reactor/react'
 
 const NewMember: React.FC = () => {
-  const auth = React.useContext(AuthContext)
+  // const auth = React.useContext(AuthContext)
+  const { authenticated, identity, error } = useAuthState()
+  const userPrincipal = useUserPrincipal()
   const [name, setName] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [feedback, setFeedback] = useState('')
   const [member, setMember] = useState<Member | null>(null)
 
+  useEffect(() => {
+    console.log(`authentiated: ${authenticated}`)
+    console.log(`userPrincipal: ${userPrincipal}`)
+    console.log(`identity: ${identity}`)
+    console.log(`error: ${error}`)
 
-  // Guard for missing auth.identity.
-  if (!auth.identity) {
-    return <div className="text-center py-4">
-      You need to log into first to become a member.
-    </div>
-  }
+    // Guard for missing identity.
+    if (!authenticated) { return }
+    if (!userPrincipal) { return }
+
+    // Fetch the member data.
+    const queryMember = async () => {
+      // Construct a Principal object from the identity string.
+      await getMember([userPrincipal])
+    }
+    queryMember()
+  }, [identity])
 
   // Redirect to the profile page after adding a new member.
   const navigate = useNavigate()
@@ -28,9 +41,22 @@ const NewMember: React.FC = () => {
     navigate('/profile')
   }
 
+  // Guard for missing auth.identity.
+  if (!authenticated || !identity) {
+    return (
+      <div className="text-center py-4">
+        To become a member, please log into the Internet Computer first.
+      </div>
+    )
+  }
+
   // Use the useUpdateCall hook to call the registerMember function.
   // Note: useUpdateCall also outputs the loading state.
-  const { call: registerMember } = useUpdateCall({
+  const {
+    call: registerMember,
+    data: registerMemberData,
+    loading: registerMemberLoading
+  } = useUpdateCall({
     functionName: 'registerMember',
     onSuccess: () => {
       // Call to backend was successful but not necessarily the registration.
@@ -40,7 +66,11 @@ const NewMember: React.FC = () => {
 
   // Use the useUpdateCall hook to call the registerMember function.
   // Note: useUpdateCall also outputs the loading state.
-  const { call: getMember } = useQueryCall({
+  const {
+    call: getMember,
+    data: getMemberData,
+    loading: getMemberLoading
+  } = useQueryCall({
     functionName: 'getMember',
     onSuccess: (result) => {
       // If the key 'ok' exists in the result, set the member state.
@@ -57,19 +87,6 @@ const NewMember: React.FC = () => {
       }
     },
   })
-
-  useEffect(() => {
-    // Guard for missing identity.
-    if (!auth.identity) { return }
-
-    // Fetch the member data.
-    const queryMember = async () => {
-      // Construct a Principal object from the identity string.
-      const principal: Principal = Principal.fromText(auth.identity)
-      await getMember([principal])
-    }
-    queryMember()
-  }, [auth.identity])
 
   // On submission the form will send data to the backend
   // It should clear the fields too.
@@ -144,7 +161,7 @@ const NewMember: React.FC = () => {
         <label htmlFor="principal" className="block text-sm font-bold mb-2">
           Principal:
         </label>
-        {auth.identity}
+        <span>{identity.toString()}</span>
       </div>
 
       {feedback ? <div role="alert" className="alert alert-warning rounded-md mb-4" >
