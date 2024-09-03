@@ -45,7 +45,7 @@ export const NavBar = () => {
       onClick={() => { logout() }}
     >
       <img src={iclogo} className="h-8 w-8 inline p-0 mb-1 mr-2 align-middle" />
-      Logout ({identity?.toString().slice(0, 6)}...{identity?.toString().slice(-4)})
+      Logout ({identity?.getPrincipal().toString().slice(0, 6)}...{identity?.getPrincipal().toString().slice(-4)})
     </a>
   }
 

@@ -1,70 +1,48 @@
-import { useEffect, useState, FC } from 'react'
-import { Actor, HttpAgent } from '@dfinity/agent'
-import {
-  Proposal,
-  ProposalContent,
-  ProposalStatus,
-} from '../../declarations/backend/backend.did'
-import { idlFactory } from '../../declarations/backend/index'
-import { Principal } from '@dfinity/principal'
+import { useEffect, FC } from 'react'
 import { CreateButton } from '../../Components/Buttons'
 import { useNavigate } from 'react-router-dom'
+import { useQueryCall, useAuthState } from '@ic-reactor/react'
+import { Proposal, ProposalContent, ProposalStatus } from '../../declarations/backend/backend.did'
 
 export const Proposals: FC = () => {
-  const [proposals, setProposals] = useState<Proposal[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<String | null>(null)
+  const { authenticated, identity } = useAuthState()
   const navigate = useNavigate()
 
   const navigateToCreateProposal = () => {
     navigate('/proposals/create') // Use navigate function
   }
 
+  const {
+    call: getProposals,
+    data: proposalsData,
+    loading: proposalsLoading,
+    error: proposalsError
+  } = useQueryCall({
+    functionName: 'getAllProposals',
+  }) as { call: () => void, data: Proposal[], loading: boolean, error: Error }
+
   useEffect(() => {
+    // Guard for unauthenticated users.
+    if (!identity || !authenticated) { return }
+
     const fetchProposals = async () => {
-      try {
-        const agent = new HttpAgent()
-
-        // TODO: This is a temporary solution to fetch the root key.
-        //       This will need to be resolved cleanly in the future.
-        await agent.fetchRootKey()
-        // console.log(`Root key is ${key.toString()}`)
-
-        // TODO: This canister ID need to change based on the environment.
-        //       local: bkyz2-fmaaa-aaaaa-qaaaq-cai
-        //       production: no defined yet
-        const canisterId = Principal.fromText('bkyz2-fmaaa-aaaaa-qaaaq-cai')
-        const actor = Actor.createActor(idlFactory, { agent, canisterId })
-
-        const result = await actor.getAllProposals()
-        const proposalsResult = result as Proposal[]
-        // Guard against empty proposals
-        if (!proposalsResult || proposalsResult.length === 0) {
-          setProposals([])
-          setLoading(false)
-          return
-        }
-        setProposals(proposalsResult)
-        setLoading(false)
-      } catch (err) {
-        console.error("Failed to fetch proposals:", err)
-        setError("Failed to fetch proposals. Please try again later.")
-        setLoading(false)
-      }
+      await getProposals()
     }
 
     fetchProposals()
   }, [])
 
+  if (!authenticated || !identity) return <div className="text-center">Please sign in to view proposals.</div>
+
   const renderProposals = () => {
     // Guard for empty proposals.
-    if (!loading && !error && proposals.length === 0) {
+    if (!proposalsData || proposalsData.length === 0) {
       return <div className="text-center">No proposals found</div>
     }
 
     return <>
-      {proposals.map((proposal) => (
-        <div key={proposal.id.toString()} className="p-6 bg-slate-800 rounded-lg shadow-lg">
+      {proposalsData.map((proposal: Proposal) => (
+        <div key={proposal.id.toString()} className="p-6 bg-slate-800 rounded-lg shadow-lg mx-auto w-6/12">
           <h2 className="text-xl font-bold mb-2">Proposal {proposal.id.toString()}</h2>
           <p className="mb-2">{renderProposalContent(proposal.content)}</p>
           <p className="mb-2">Status: {renderProposalStatus(proposal.status)}</p>
@@ -96,10 +74,8 @@ export const Proposals: FC = () => {
     return 'Unknown status'
   }
 
-  if (loading) return <div className="text-center">{renderAddProposalButton()}Loading proposals...</div>
-  if (error) return <div className="text-center text-red-500">{error}</div>
-
-
+  if (proposalsLoading) return <div className="text-center">{renderAddProposalButton()}Loading proposals...</div>
+  if (proposalsError) return <div className="text-center text-red-500">{proposalsError.message}</div>
 
   return (
     <div className="space-y-4">

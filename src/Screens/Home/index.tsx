@@ -6,17 +6,12 @@ import viteLogo from '../../assets/vite.svg'
 import tailwindLogo from '../../assets/tailwind-css-logo.png'
 import { CtaButton } from '../../Components/Buttons'
 import { useNavigate } from 'react-router-dom'
-import { useAgent } from '@ic-reactor/react'
 
 export const Home: FC = () => {
   const navigate = useNavigate()
   const navigateToMembership = () => {
     navigate('/members/new') // Use navigate function
   }
-
-  const agent = useAgent()
-  console.log(JSON.stringify(agent))
-  console.log(process.env)
 
   return (
     <div className="App">

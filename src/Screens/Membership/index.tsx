@@ -10,7 +10,7 @@ import { useAuthState, useUserPrincipal } from '@ic-reactor/react'
 
 const NewMember: React.FC = () => {
   // const auth = React.useContext(AuthContext)
-  const { authenticated, identity, error } = useAuthState()
+  const { authenticated, identity } = useAuthState()
   const userPrincipal = useUserPrincipal()
   const [name, setName] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -18,11 +18,6 @@ const NewMember: React.FC = () => {
   const [member, setMember] = useState<Member | null>(null)
 
   useEffect(() => {
-    console.log(`authentiated: ${authenticated}`)
-    console.log(`userPrincipal: ${userPrincipal}`)
-    console.log(`identity: ${identity}`)
-    console.log(`error: ${error}`)
-
     // Guard for missing identity.
     if (!authenticated) { return }
     if (!userPrincipal) { return }
@@ -77,12 +72,6 @@ const NewMember: React.FC = () => {
       if (hasKey(result, 'ok')) {
         const memberData: Member = JSON.parse(JSON.stringify(result.ok))
         setMember(memberData)
-        return
-      }
-
-      // If the member doesn't exist do nothing.
-      if (hasKey(result, 'err')) {
-        console.log('Error:', result.err)
         return
       }
     },
@@ -161,7 +150,7 @@ const NewMember: React.FC = () => {
         <label htmlFor="principal" className="block text-sm font-bold mb-2">
           Principal:
         </label>
-        <span>{identity.toString()}</span>
+        <span>{userPrincipal?.toString()}</span>
       </div>
 
       {feedback ? <div role="alert" className="alert alert-warning rounded-md mb-4" >

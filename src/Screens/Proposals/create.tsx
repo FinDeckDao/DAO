@@ -1,55 +1,42 @@
 import React, { useState, useEffect } from 'react'
-import { Actor, HttpAgent } from "@dfinity/agent"
-import { _SERVICE, ProposalContent } from '../../declarations/backend/backend.did'
-import { idlFactory } from '../../declarations/backend'
-import { Principal } from '@dfinity/principal'
+import { useQueryCall, useUpdateCall, useUserPrincipal } from '@ic-reactor/react'
+import { ProposalContent } from '../../declarations/backend/backend.did'
+import { useAuthState } from '@ic-reactor/react'
 
 export const CreateProposal: React.FC = () => {
-  const [actor, setActor] = useState<_SERVICE | null>(null)
-  const [proposalType, setProposalType] = useState<keyof ProposalContent>('AddGoal' as keyof ProposalContent)
-  const [content, setContent] = useState('')
-  const [status, setStatus] = useState<string | null>(null)
+  const userPrincipal = useUserPrincipal()
+  const { authenticated, identity } = useAuthState()
+  const [proposalType, setProposalType] = useState<keyof ProposalContent>()
+  const [content, setContent] = useState<string>('')
+  // const [mentor, setMentor] = useState<string>('') // This string will be from the list of graduates.
 
-  useEffect(() => {
-    console.log(process.env)
+  if (!authenticated || !identity || !userPrincipal) {
+    return (
+      <div className="text-center py-4">
+        Please sign in to create or review proposals.
+      </div>
+    )
+  }
 
-    const initActor = async () => {
-      try {
-        const agent = new HttpAgent()
-        // When deploying to the IC, remove the following line:
-        await agent.fetchRootKey()
-        const actor = Actor.createActor<_SERVICE>(idlFactory, {
-          agent,
-          canisterId: process.env.CANISTER_ID_BACKEND || "",
-        })
-        setActor(actor)
-      } catch (error) {
-        console.error("Failed to initialize actor:", error)
-        setStatus("Failed to initialize. Please try again later.")
-      }
-    }
-
-    initActor()
-  }, [])
+  const { } = useUpdateCall({
+    functionName: 'createProposal'
+  })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!actor) {
-      setStatus('Actor not initialized. Please try again.')
-      return
-    }
 
-    setStatus('Submitting...')
-
+    // Create a new proposal.
     let proposalContent: ProposalContent
 
-    try {
+    // Determine the proposal type that was selected.
+
+    if (proposalType) {
       switch (proposalType) {
         case 'AddGoal':
           proposalContent = { AddGoal: content }
           break
         case 'AddMentor':
-          const mentorPrincipal = Principal.fromText(content)
+          const mentorPrincipal = userPrincipal
           proposalContent = { AddMentor: mentorPrincipal }
           break
         case 'ChangeManifesto':
@@ -58,25 +45,27 @@ export const CreateProposal: React.FC = () => {
         default:
           throw new Error('Invalid proposal type')
       }
-
-      const result = await actor.createProposal(proposalContent)
-      if ('ok' in result) {
-        setStatus(`Proposal created successfully with ID: ${result.ok.toString()}`)
-        setContent('')
-      } else {
-        setStatus(`Error creating proposal: ${result.err}`)
-      }
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        setStatus(`Error: ${error.message}`)
-      } else {
-        setStatus('An unknown error occurred')
-      }
     }
-  }
 
-  if (!actor) {
-    return <div>Initializing...</div>
+    const { call: createProposal, data, loading } = useUpdateCall({
+      functionName: 'createProposal',
+    })
+
+    // try {
+    //   const result = await actor.createProposal(proposalContent)
+    //   if ('ok' in result) {
+    //     setStatus(`Proposal created successfully with ID: ${result.ok.toString()}`)
+    //     setContent('')
+    //   } else {
+    //     setStatus(`Error creating proposal: ${result.err}`)
+    //   }
+    // } catch (error: unknown) {
+    //   if (error instanceof Error) {
+    //     setStatus(`Error: ${error.message}`)
+    //   } else {
+    //     setStatus('An unknown error occurred')
+    //   }
+    // }
   }
 
   return (

@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthState, useUserPrincipal } from '@ic-reactor/react'
 
 export const UserProfile: React.FC = () => {
-  const { identity } = useAuthState()
+  const { authenticated, identity } = useAuthState()
   // Construct a Principal object from the identity string.
   const principal: Principal | undefined = useUserPrincipal()
   const [member, setMember] = useState<Member | null>(null)
@@ -17,6 +17,42 @@ export const UserProfile: React.FC = () => {
   const navigate = useNavigate()
   const navigateToMembership = () => {
     navigate('/members/new') // Use navigate function
+  }
+
+  useEffect(() => {
+    // Guard for unauthenticated users.
+    if (!identity || !authenticated) { return }
+
+    // Set the loading state to true.
+    setIsLoading(true)
+
+    const fetchMemberData = async () => {
+      // Guard for missing principal.
+      if (!principal) { return }
+
+      // Call the getMember function with the principal.
+      await getMember([principal])
+
+      // Change the loading state to false.
+      setIsLoading(false)
+    }
+
+    // Call the fetchMemberData function.
+    fetchMemberData()
+  }, [])
+
+
+  // There are 2 reasons the profile won't show up.
+  // 1. The user is not authenticated.
+  // 2. The user is authenticated but not a member.
+
+  // Guard for missing authentication
+  if (!identity || !authenticated) {
+    return (
+      <div className="text-center py-4">
+        Please login and register as a member to view your profile.
+      </div>
+    )
   }
 
   // Use the useUpdateCall hook to call the registerMember function.
@@ -37,37 +73,12 @@ export const UserProfile: React.FC = () => {
         return
       }
     },
-  })
-
-  // There are 2 reasons the profile won't show up.
-  // 1. The user is not authenticated.
-  // 2. The user is authenticated but not a member.
-
-  useEffect(() => {
-    // Set the loading state to true.
-    setIsLoading(true)
-
-    const fetchMemberData = async () => {
-      // Guard for missing principal.
-      if (!principal) { return }
-
-      // Call the getMember function with the principal.
-      await getMember([principal])
-
-      // Change the loading state to false.
-      setIsLoading(false)
+    onError: (error) => {
+      if (hasKey(error, 'err')) {
+        console.log(error.err)
+      }
     }
-
-    // Call the fetchMemberData function.
-    fetchMemberData()
-  }, [principal])
-
-  // Guard for missing auth.identity.
-  if (!identity) {
-    return <div className="text-center py-4">
-      You need to log into first and register as a member to view your profile.
-    </div>
-  }
+  })
 
   if (isLoading) {
     return <div className="text-center py-4">Loading profile...</div>
@@ -101,7 +112,19 @@ export const UserProfile: React.FC = () => {
         <p>
           <span className="font-semibold">Identity:</span>{" "}
           <span className="break-all">
-            {identity ? `${identity.toString()}` : null}
+            {principal ? `${principal.toString()}` : null}
+          </span>
+        </p>
+        <p>
+          <span className="font-semibold">Tokens Held:</span>{" "}
+          <span className="break-all">
+            0 $FDK
+          </span>
+        </p>
+        <p>
+          <span className="font-semibold">Voting Rights:</span>{" "}
+          <span className="break-all">
+            0 $FDK
           </span>
         </p>
       </div>
