@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, useEffect } from 'react'
 import motokoLogo from '../../assets/motoko_moving.png'
 import motokoShadowLogo from '../../assets/motoko_shadow.png'
 import reactLogo from '../../assets/react.svg'
@@ -6,12 +6,26 @@ import viteLogo from '../../assets/vite.svg'
 import tailwindLogo from '../../assets/tailwind-css-logo.png'
 import { CtaButton } from '../../Components/Buttons'
 import { useNavigate } from 'react-router-dom'
+import { useQueryCall } from '@ic-reactor/react'
 
 export const Home: FC = () => {
   const navigate = useNavigate()
   const navigateToMembership = () => {
     navigate('/members/new') // Use navigate function
   }
+
+  const { data: manifesto, loading } = useQueryCall({
+    functionName: 'getManifesto',
+  }) as { data: string, loading: boolean }
+
+  const getManifesto = async () => {
+    if (!manifesto || loading) { return <span>Fetching Manifesto</span> }
+    return <span>{manifesto}</span>
+  }
+
+  useEffect(() => {
+    getManifesto()
+  }, [])
 
   return (
     <div className="App">
@@ -52,6 +66,7 @@ export const Home: FC = () => {
 
       <div className="container mx-auto w-6/12">
         <h1 className='text-red-700 text-4xl'>FinDeckDAO</h1>
+        <h2>{manifesto}</h2>
         <p>
           The FindeckDAO is "Decentralized Autaunomous Organization" builds Decision Support Systems on the Internet Computer.
           We create "Decision Support Systems" to help people handle problems in an increasingly complex world.

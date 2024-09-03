@@ -1,10 +1,12 @@
 import Principal "mo:base/Principal";
 import Result "mo:base/Result";
+import Error "mo:base/Error";
 import Types "types";
 import DAOManager "modules/DaoManager/main";
 import MemberManager "modules/MemberManager/main";
 import ProposalManager "modules/ProposalManager/main";
 import WebpageManager "modules/WebpageManager/main";
+import TokenCanister "canister:token"
 
 actor {
   stable var manifesto : Text = "Help new traders to become profitable and understand key concepts that increase the probability of trading and investing profitably.";
@@ -57,10 +59,44 @@ actor {
   // ✅ public shared ({ caller }) func registerMember(member : Member) : async Result<(), Text>
   public shared ({ caller }) func registerMember(member : Types.Member) : async Result.Result<(), Text> {
     let (newEntries, result) = MemberManager.registerMember(memberEntries, member, caller);
-    memberEntries := newEntries;
-    result;
+
+    switch (result) {
+      // New member was added successfully
+      case (#ok(_)) {
+        // Call the token actor to mint tokens for the new member.
+        let paymentResult = await payMember(caller, 10);
+
+        // Evaluate the payment result.
+        switch (paymentResult) {
+          case (#ok) {
+            // Payment successful, update memberEntries
+            memberEntries := newEntries;
+            #ok(())
+          };
+          case (#err(paymentError)) {
+            // Payment failed, return an error
+            #err("Member registered but payment failed: " # paymentError)
+          };
+        };
+      };
+      case (#err(error)) {
+        // Registration failed, return the error
+        #err(error)
+      };
+    };
   };
 
+  func payMember(caller: Principal, amount: Nat) : async Result.Result<(), Text> {
+    try {
+      let result = await TokenCanister.mint(caller, amount);
+      switch (result) {
+        case (#ok) { #ok(()) };
+        case (#err(errorMsg)) { #err(errorMsg) };
+      }
+    } catch (error) {
+      #err("Failed to mint tokens: " # Error.message(error))
+    }
+  };
 
   // ✅ public query func getMember(p : Principal) : async Result<Member, Text>
   public query func getMember(p : Principal) : async Result.Result<Types.Member, Text> {

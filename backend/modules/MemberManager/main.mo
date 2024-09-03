@@ -7,14 +7,28 @@ import Text "mo:base/Text";
 import Types "../../types";
 
 module {
-  public func registerMember(members : [(Principal, Types.Member)], member : Types.Member, caller : Principal) : ([(Principal, Types.Member)], Result.Result<(), Text>) {
+  public func registerMember(
+    members : [(Principal, Types.Member)],
+    member : Types.Member,
+    caller : Principal,
+  ) : (
+    [(Principal, Types.Member)],
+    Result.Result<(), Text>,
+  ) {
     let membersBuffer = Buffer.fromArray<(Principal, Types.Member)>(members);
 
-    switch (Buffer.indexOf<(Principal, Types.Member)>((caller, member), membersBuffer, func((p1, _), (p2, _)) = p1 == p2)) {
+    switch (
+      Buffer.indexOf<(Principal, Types.Member)>(
+        (caller, member),
+        membersBuffer,
+        func((p1, _), (p2, _)) = p1 == p2,
+      )
+    ) {
       case null {
         // Force the role to Student regardless of what was passed in.
         let newMember = (caller, { name = member.name; role = #Student });
         membersBuffer.add(newMember);
+
         (Buffer.toArray(membersBuffer), #ok());
       };
       case (?_) (members, #err("Member by this name already exists."));
