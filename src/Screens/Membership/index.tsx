@@ -8,6 +8,9 @@ import { hasKey } from '../../utils'
 import { CtaButton } from '../../Components/Buttons'
 import { useAuthState, useUserPrincipal } from '@ic-reactor/react'
 
+// TODO: This component has too many responsibilities.
+//       It will work for now but it's doing too much.
+
 const NewMember: React.FC = () => {
   // const auth = React.useContext(AuthContext)
   const { authenticated, identity } = useAuthState()
@@ -34,15 +37,6 @@ const NewMember: React.FC = () => {
   const navigate = useNavigate()
   const redirectToProfile = () => {
     navigate('/profile')
-  }
-
-  // Guard for missing auth.identity.
-  if (!authenticated || !identity) {
-    return (
-      <div className="text-center py-4">
-        To become a member, please log into the Internet Computer first.
-      </div>
-    )
   }
 
   // Use the useUpdateCall hook to call the registerMember function.
@@ -77,6 +71,38 @@ const NewMember: React.FC = () => {
     },
   })
 
+  // There are 2 reasons the new member form should not show up.
+  // 1. The user is not authenticated.
+  // 2. The user is authenticated but already a member.
+
+  // Guard for missing auth.identity.
+  // Case 1 Not authenticated.
+  if (!authenticated || !identity) {
+    return (
+      <div className="text-center py-4">
+        To become a member, please log into the Internet Computer first.
+      </div>
+    )
+  }
+
+  // Guard for existing member.
+  // Case 2 Already a member.
+  if (member) {
+    return <div className="shadow-md rounded-lg p-6 mx-auto max-w-2xl bg-slate-800">
+      <h1>Looks like you're already a registered member.</h1>
+      <p>
+        Currently, we don't have a mechanism to remove or update members.
+      </p>
+      <p className="mb-8">
+        In the future, we will have a way to remove or update your membership details from your profile.
+      </p>
+      <CtaButton
+        onClick={redirectToProfile}
+        cta="Go to Profile"
+      />
+    </div>
+  }
+
   // On submission the form will send data to the backend
   // It should clear the fields too.
   const handleSubmit = async (e: React.FormEvent) => {
@@ -109,23 +135,6 @@ const NewMember: React.FC = () => {
 
     // Redirect to the profile page.
     redirectToProfile()
-  }
-
-  // Guard for existing member.
-  if (member) {
-    return <div className="shadow-md rounded-lg p-6 mx-auto max-w-2xl bg-slate-800">
-      <h1>Looks like you're already a registered member.</h1>
-      <p>
-        Currently, we don't have a mechanism to remove or update members.
-      </p>
-      <p className="mb-8">
-        In the future, we will have a way to remove or update your membership details from your profile.
-      </p>
-      <CtaButton
-        onClick={redirectToProfile}
-        cta="Go to Profile"
-      />
-    </div>
   }
 
   return (

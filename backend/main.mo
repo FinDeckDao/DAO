@@ -6,7 +6,7 @@ import DAOManager "modules/DaoManager/main";
 import MemberManager "modules/MemberManager/main";
 import ProposalManager "modules/ProposalManager/main";
 import WebpageManager "modules/WebpageManager/main";
-import TokenCanister "canister:token"
+import MBToken "canister:token";
 
 actor {
   stable var manifesto : Text = "Help new traders to become profitable and understand key concepts that increase the probability of trading and investing profitably.";
@@ -65,7 +65,6 @@ actor {
       case (#ok(_)) {
         // Call the token actor to mint tokens for the new member.
         let paymentResult = await payMember(caller, 10);
-
         // Evaluate the payment result.
         switch (paymentResult) {
           case (#ok) {
@@ -78,23 +77,33 @@ actor {
             #err("Member registered but payment failed: " # paymentError)
           };
         };
+        // memberEntries := newEntries;
+        // #ok(());
       };
       case (#err(error)) {
         // Registration failed, return the error
-        #err(error)
+        #err("Registration failed:" # error)
       };
     };
   };
 
   func payMember(caller: Principal, amount: Nat) : async Result.Result<(), Text> {
     try {
-      let result = await TokenCanister.mint(caller, amount);
+      let result = await MBToken.mint(caller, amount);
       switch (result) {
         case (#ok) { #ok(()) };
         case (#err(errorMsg)) { #err(errorMsg) };
       }
     } catch (error) {
       #err("Failed to mint tokens: " # Error.message(error))
+    }
+  };
+
+  public shared ({caller = _}) func getTokenBalanceFor(p : Principal) : async Nat {
+    try {
+      await MBToken.balanceOf(p);
+    } catch (_error) {
+      0
     }
   };
 

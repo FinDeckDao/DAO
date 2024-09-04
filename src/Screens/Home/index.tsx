@@ -14,17 +14,17 @@ export const Home: FC = () => {
     navigate('/members/new') // Use navigate function
   }
 
-  const { data: manifesto, loading } = useQueryCall({
+  const { call: fetchManifesto, data: manifesto, loading } = useQueryCall({
     functionName: 'getManifesto',
-  }) as { data: string, loading: boolean }
+  }) as { call: Function, data: string, loading: boolean }
 
-  const getManifesto = async () => {
+  const getManifesto = () => {
     if (!manifesto || loading) { return <span>Fetching Manifesto</span> }
     return <span>{manifesto}</span>
   }
 
   useEffect(() => {
-    getManifesto()
+    fetchManifesto()
   }, [])
 
   return (
@@ -66,7 +66,7 @@ export const Home: FC = () => {
 
       <div className="container mx-auto w-6/12">
         <h1 className='text-red-700 text-4xl'>FinDeckDAO</h1>
-        <h2>{manifesto}</h2>
+        <h2>{getManifesto()}</h2>
         <p>
           The FindeckDAO is "Decentralized Autaunomous Organization" builds Decision Support Systems on the Internet Computer.
           We create "Decision Support Systems" to help people handle problems in an increasingly complex world.

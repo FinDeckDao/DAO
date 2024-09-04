@@ -4,6 +4,7 @@ import Principal "mo:base/Principal";
 import Map "mo:map/Map";
 import Buffer "mo:base/Buffer";
 import { phash } "mo:map/Map";
+
 actor MBToken {
 
   public type Result<A, B> = Result.Result<A, B>;

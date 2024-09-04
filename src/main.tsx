@@ -6,13 +6,14 @@ import {
   ActorProvider,
   AgentProvider
 } from '@ic-reactor/react'
-import { idlFactory, canisterId } from './declarations/backend'
+import { idlFactory as backendIdlFactory, canisterId as backendCanisterId } from './declarations/backend'
+// import { idlFactory as tokenIdlFactory, canisterId as tokenCanisterId } from './declarations/token'
 import { ErrorPage } from './Components/Error'
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <AgentProvider withLocalEnv port={8000}>
-      <ActorProvider idlFactory={idlFactory} canisterId={canisterId} errorComponent={ErrorPage}>
+      <ActorProvider idlFactory={backendIdlFactory} canisterId={backendCanisterId} errorComponent={ErrorPage}>
         <App />
       </ActorProvider>
     </AgentProvider>
