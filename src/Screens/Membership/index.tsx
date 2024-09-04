@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Member } from '../../declarations/backend/backend.did'
-// import AuthContext from '../../Contexts/Auth'
 import { useQueryCall, useUpdateCall } from '@ic-reactor/react'
 import { useNavigate } from 'react-router-dom'
 import { hasKey } from '../../utils'
-// import { Principal } from '@dfinity/principal'
 import { CtaButton } from '../../Components/Buttons'
 import { useAuthState, useUserPrincipal } from '@ic-reactor/react'
 
@@ -12,7 +10,6 @@ import { useAuthState, useUserPrincipal } from '@ic-reactor/react'
 //       It will work for now but it's doing too much.
 
 const NewMember: React.FC = () => {
-  // const auth = React.useContext(AuthContext)
   const { authenticated, identity } = useAuthState()
   const userPrincipal = useUserPrincipal()
   const [name, setName] = useState('')
@@ -20,10 +17,15 @@ const NewMember: React.FC = () => {
   const [feedback, setFeedback] = useState('')
   const [member, setMember] = useState<Member | null>(null)
 
+  // Redirect to the profile page after adding a new member.
+  const navigate = useNavigate()
+  const redirectToProfile = () => {
+    navigate('/profile')
+  }
+
   useEffect(() => {
     // Guard for missing identity.
-    if (!authenticated) { return }
-    if (!userPrincipal) { return }
+    if (!authenticated || !userPrincipal) { return }
 
     // Fetch the member data.
     const queryMember = async () => {
@@ -32,12 +34,6 @@ const NewMember: React.FC = () => {
     }
     queryMember()
   }, [identity])
-
-  // Redirect to the profile page after adding a new member.
-  const navigate = useNavigate()
-  const redirectToProfile = () => {
-    navigate('/profile')
-  }
 
   // Use the useUpdateCall hook to call the registerMember function.
   // Note: useUpdateCall also outputs the loading state.
@@ -70,20 +66,6 @@ const NewMember: React.FC = () => {
       }
     },
   })
-
-  // There are 2 reasons the new member form should not show up.
-  // 1. The user is not authenticated.
-  // 2. The user is authenticated but already a member.
-
-  // Guard for missing auth.identity.
-  // Case 1 Not authenticated.
-  if (!authenticated || !identity) {
-    return (
-      <div className="text-center py-4">
-        To become a member, please log into the Internet Computer first.
-      </div>
-    )
-  }
 
   // Guard for existing member.
   // Case 2 Already a member.

@@ -14,6 +14,7 @@ import {
   UserGroupIcon
 } from "@heroicons/react/24/outline"
 import NewMember from "../Screens/Membership"
+import { Authenticate } from "../Components/Authenticate"
 
 interface NavigationItem {
   name: string
@@ -43,7 +44,9 @@ export const router = createBrowserRouter([
     path: "/proposals",
     element: (
       <DefaultLayout>
-        <Proposals />
+        <Authenticate>
+          <Proposals />
+        </Authenticate>
       </DefaultLayout>
     ),
     errorElement: <ErrorPage />
@@ -52,7 +55,9 @@ export const router = createBrowserRouter([
     path: "/proposals/create",
     element: (
       <DefaultLayout>
-        <CreateProposal />
+        <Authenticate>
+          <CreateProposal />
+        </Authenticate>
       </DefaultLayout>
     ),
     errorElement: <ErrorPage />
@@ -61,8 +66,10 @@ export const router = createBrowserRouter([
     path: "/profile",
     element: (
       <DefaultLayout>
-        <UserProfile />
-      </DefaultLayout>
+        <Authenticate>
+          <UserProfile />
+        </Authenticate>
+      </DefaultLayout >
     ),
     errorElement: <ErrorPage />
   },
@@ -70,7 +77,9 @@ export const router = createBrowserRouter([
     path: "/members/new",
     element: (
       <DefaultLayout>
-        <NewMember />
+        <Authenticate>
+          <NewMember />
+        </Authenticate>
       </DefaultLayout>
     ),
     errorElement: <ErrorPage />

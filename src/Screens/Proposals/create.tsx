@@ -2,24 +2,21 @@ import React, { useState, useEffect } from 'react'
 import { useQueryCall, useUpdateCall, useUserPrincipal } from '@ic-reactor/react'
 import { ProposalContent } from '../../declarations/backend/backend.did'
 import { useAuthState } from '@ic-reactor/react'
+import { ErrorPage } from '../../Components/Error'
+import { hasKey } from '../../utils'
 
 export const CreateProposal: React.FC = () => {
   const userPrincipal = useUserPrincipal()
   const { authenticated, identity } = useAuthState()
   const [proposalType, setProposalType] = useState<keyof ProposalContent>()
   const [content, setContent] = useState<string>('')
-  // const [mentor, setMentor] = useState<string>('') // This string will be from the list of graduates.
 
-  if (!authenticated || !identity || !userPrincipal) {
-    return (
-      <div className="text-center py-4">
-        Please sign in to create or review proposals.
-      </div>
-    )
+  if (!userPrincipal) {
+    return <ErrorPage errorMessage="Your user principal couldn't be retrieved. This our fault not yours." />
   }
 
-  const { } = useUpdateCall({
-    functionName: 'createProposal'
+  const { call: createProposal, data, loading } = useUpdateCall({
+    functionName: 'createProposal',
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,38 +31,21 @@ export const CreateProposal: React.FC = () => {
       switch (proposalType) {
         case 'AddGoal':
           proposalContent = { AddGoal: content }
-          break
+          createProposal([proposalContent])
+          return
         case 'AddMentor':
           const mentorPrincipal = userPrincipal
           proposalContent = { AddMentor: mentorPrincipal }
-          break
+          createProposal([proposalContent])
+          return
         case 'ChangeManifesto':
           proposalContent = { ChangeManifesto: content }
-          break
+          createProposal([proposalContent])
+          return
         default:
           throw new Error('Invalid proposal type')
       }
     }
-
-    const { call: createProposal, data, loading } = useUpdateCall({
-      functionName: 'createProposal',
-    })
-
-    // try {
-    //   const result = await actor.createProposal(proposalContent)
-    //   if ('ok' in result) {
-    //     setStatus(`Proposal created successfully with ID: ${result.ok.toString()}`)
-    //     setContent('')
-    //   } else {
-    //     setStatus(`Error creating proposal: ${result.err}`)
-    //   }
-    // } catch (error: unknown) {
-    //   if (error instanceof Error) {
-    //     setStatus(`Error: ${error.message}`)
-    //   } else {
-    //     setStatus('An unknown error occurred')
-    //   }
-    // }
   }
 
   return (
@@ -101,16 +81,15 @@ export const CreateProposal: React.FC = () => {
         </div>
         <button
           type="submit"
-          className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          className="w-full py-2 px-4 border border-transparent rounded-md 
+                    shadow-sm text-sm font-medium text-white bg-indigo-600
+                  hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2
+                  focus:ring-indigo-500"
         >
-          Create Proposal
+          {loading ? "Submitting Proposal..." : "Create Proposal"}
         </button>
+        <p>{hasKey(data, "ok") ? `${data.ok}` : null}</p>
       </form>
-      {status && (
-        <div className="mt-4 p-2 rounded">
-          <p>{status}</p>
-        </div>
-      )}
     </div>
   )
 }

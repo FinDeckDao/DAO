@@ -1,11 +1,17 @@
-
+import { FC } from 'react'
 import join from "../../Assets/join-findeck-on-openchat.png"
 
-export const ErrorPage = () => {
+interface ErrorPageProps {
+  errorMessage: string
+}
+
+export const ErrorPage: FC<ErrorPageProps> = (props) => {
+  const { errorMessage } = props
 
   return (
     <div id="error-page" className=" bg-slate-800 w-full h-auto text-sky-100 p-4 text-center">
-      <h1>Sorry FinDeck.io doesn't understand what you're requesting.</h1>
+      <h1>Thanks for your patience | FinDeck.io ran into a problem.</h1>
+      <h2>{errorMessage}</h2>
       <p>Very sorry for the confusion.</p>
 
       <p>Origin on the Internet Computer: {import.meta.env.VITE_CANISTER_ORIGIN}</p>

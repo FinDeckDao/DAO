@@ -54,19 +54,6 @@ export const UserProfile: React.FC = () => {
     fetchTokens()
   }, [])
 
-  // There are 2 reasons the profile won't show up.
-  // 1. The user is not authenticated.
-  // 2. The user is authenticated but not a member.
-
-  // Guard for missing authentication
-  if (!identity || !authenticated) {
-    return (
-      <div className="text-center py-4">
-        Please login and register as a member to view your profile.
-      </div>
-    )
-  }
-
   // Use the useUpdateCall hook to call the registerMember function.
   // Note: useUpdateCall also outputs the loading state.
   const { call: getMember } = useQueryCall({
@@ -102,7 +89,7 @@ export const UserProfile: React.FC = () => {
   }) as { call: Function, data: number, loading: boolean }
 
   if (isLoading || getTokensLoading) {
-    return <div className="text-center py-4">Loading profile...</div>
+    return <div className="text-center py-4">Loading your Findeck DAO profile...</div>
   }
 
   if (error) {
@@ -167,7 +154,7 @@ export const UserProfile: React.FC = () => {
             {
               tokenData
                 ? Number(String(tokenData))
-                : "No Data"
+                : "Fetching your token balance..."
             } {" "}$FDK
           </span>
         </p>
@@ -177,7 +164,7 @@ export const UserProfile: React.FC = () => {
             {
               member.role && tokenData
                 ? `${calculateVotingRights(Number(String(tokenData)))}`
-                : "No Voting Rights"
+                : "Checking on your voting rights..."
             }
           </span>
         </p>
