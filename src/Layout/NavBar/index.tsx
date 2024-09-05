@@ -4,50 +4,11 @@ import {
 import { Dialog, DialogPanel } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import { Link } from "react-router-dom"
-import iclogo from '../../assets/internet-computer-icp-logo.svg'
 import { navigation } from "../../Routes"
-import { useAuth, useAgent } from "@ic-reactor/react"
+import { LoginButton } from "../../Components/Authenticate/LoginButton"
 
 export const NavBar = () => {
-  const { login, logout, authenticated, identity, loginError } = useAuth({
-    onLoginSuccess: (principal) => console.log(`Logged in as ${principal}`),
-    onLoginError: (error) => console.error(`Login failed: ${error}`),
-  })
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const agent = useAgent()
-
-  const getLoginButton = () => {
-    // Guard for unauthenticated user or login error
-    if (!authenticated || !identity || loginError) {
-      return <div
-        onClick={(e) => {
-          e.preventDefault()
-          // Login with II on the IC default
-          // or with the local environment
-          login({
-            identityProvider: agent?.isLocal()
-              ? 'http://be2us-64aaa-aaaaa-qaabq-cai.localhost:8000/#authorize'
-              : 'https://identity.ic0.app/#authorize'
-          })
-        }}
-        className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7
-                   text-sky-100 hover:bg-slate-700"
-      >
-        <img src={iclogo} className="h-8 w-8 inline p-0 mb-1 mr-2 align-middle" />
-        Login
-      </div>
-    }
-
-    return <a
-      href="/"
-      className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7
-                 text-sky-100 hover:bg-slate-700"
-      onClick={() => { logout() }}
-    >
-      <img src={iclogo} className="h-8 w-8 inline p-0 mb-1 mr-2 align-middle" />
-      Logout ({identity?.getPrincipal().toString().slice(0, 6)}...{identity?.getPrincipal().toString().slice(-4)})
-    </a>
-  }
 
   return <header className="col-span-12 bg-slate-800 text-sky-100">
     {/* Default Menu */}
@@ -79,8 +40,7 @@ export const NavBar = () => {
         ))}
       </div>
       <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-
-        {getLoginButton()}
+        <LoginButton />
       </div>
     </nav>
     {/* Mobile Menu */}
@@ -113,7 +73,7 @@ export const NavBar = () => {
               ))}
             </div>
             <div className="py-6">
-              {/* {getLoginButton()} */}
+              <LoginButton />
             </div>
           </div>
         </div>

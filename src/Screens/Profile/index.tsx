@@ -1,110 +1,27 @@
 import React, { useEffect, useState } from 'react'
-import { Member } from '../../declarations/backend/backend.did'
 import { useQueryCall } from '@ic-reactor/react'
-import { hasKey } from '../../utils'
-import { CtaButton } from '../../Components/Buttons'
-import { useNavigate } from 'react-router-dom'
-import { useAuthState, useUserPrincipal } from '@ic-reactor/react'
+import { useUserPrincipal } from '@ic-reactor/react'
+import { MembersOnlyChildComponentProps } from '../../Components/MembersOnly'
 
 // TODO: This component has too many responsibilities.
 //       It will work for now but it's doing too much.
 
-export const UserProfile: React.FC = () => {
-  const { authenticated, identity } = useAuthState()
+export const UserProfile: React.FC<MembersOnlyChildComponentProps> = (props) => {
+  const { memberData: member } = props
   const principal = useUserPrincipal()
-  const [member, setMember] = useState<Member | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const navigate = useNavigate()
-
-  const navigateToMembership = () => {
-    navigate('/members/new') // Use navigate function
-  }
-
-  useEffect(() => {
-    // Guard for unauthenticated users.
-    if (!identity || !authenticated) { return }
-
-    // Set the loading state to true.
-    setIsLoading(true)
-
-    const fetchMemberData = async () => {
-      // Guard for missing principal.
-      if (!principal) { return }
-
-      // Call the getMember function with the principal.
-      await getMember([principal])
-
-      // Change the loading state to false.
-      setIsLoading(false)
-    }
-
-    const fetchTokens = async () => {
-      // Guard for missing principal.
-      if (!principal) { return }
-
-      // Call the getMemberTokens function with the principal.
-      await getTokenBalanceFor([principal])
-    }
-
-    // Call the fetchMemberData function.
-    fetchMemberData()
-
-    // Call the fetchTokens function.
-    fetchTokens()
-  }, [])
-
-  // Use the useUpdateCall hook to call the registerMember function.
-  // Note: useUpdateCall also outputs the loading state.
-  const { call: getMember } = useQueryCall({
-    functionName: 'getMember',
-    onSuccess: (result) => {
-      // If the key 'ok' exists in the result, set the member state.
-      if (hasKey(result, 'ok')) {
-        const memberData: Member = JSON.parse(JSON.stringify(result.ok))
-        setMember(memberData)
-        setError(null)
-        return
-      }
-
-      if (hasKey(result, 'err')) {
-        setError(result.err as string)
-        return
-      }
-    },
-    onError: (error) => {
-      if (hasKey(error, 'err')) {
-        setError(error.err as string)
-      }
-    }
-  })
-
-  const { call: getTokenBalanceFor, data: tokenData, loading: getTokensLoading } = useQueryCall({
-    functionName: 'getTokenBalanceFor',
-    onError: (error) => {
-      if (hasKey(error, 'err')) {
-        setError(error.err as string)
-      }
-    }
-  }) as { call: Function, data: number, loading: boolean }
-
-  if (isLoading || getTokensLoading) {
-    return <div className="text-center py-4">Loading your Findeck DAO profile...</div>
-  }
-
-  if (error) {
-    return <div className="text-center py-4">
-      <h1>It looks like you're not a member of the Dao.</h1>
-      <p>
-        To get started please register as a member.
-      </p>
-      <p>{error}</p>
-      <CtaButton cta="Get Started" onClick={navigateToMembership} classOverrides='mx-auto' />
-    </div>
-  }
 
   if (!member) {
-    return <div className="text-center py-4">No member data found.</div>
+    return <div>Loading...</div>
+  }
+
+  const { call, data, loading } = useQueryCall({
+    functionName: 'getTokenBalanceFor',
+    args: [principal],
+  }) as { call: Function, data: number, loading: boolean }
+
+  // Guard for data loading.
+  if (loading) {
+    return <div className="text-center py-4">Loading your Findeck DAO profile...</div>
   }
 
   // TODO: This is jus a quick and dirty way to calculate voting rights.
@@ -152,8 +69,8 @@ export const UserProfile: React.FC = () => {
           <span className="font-semibold">Tokens Held:</span>{" "}
           <span className="break-all">
             {
-              tokenData
-                ? Number(String(tokenData))
+              data
+                ? Number(String(data))
                 : "Fetching your token balance..."
             } {" "}$FDK
           </span>
@@ -162,8 +79,8 @@ export const UserProfile: React.FC = () => {
           <span className="font-semibold">Voting Rights:</span>{" "}
           <span className="break-all">
             {
-              member.role && tokenData
-                ? `${calculateVotingRights(Number(String(tokenData)))}`
+              member.role && data
+                ? `${calculateVotingRights(Number(String(data)))}`
                 : "Checking on your voting rights..."
             }
           </span>

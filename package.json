@@ -11,6 +11,8 @@
     "format": "prettier --write \"src/**/*.{json,js,jsx,ts,tsx,css,scss}\" \"backend/**/*.mo\"",
     "frontend": "vite --port 3000",
     "postinstall": "mops install",
+    "deploy:token": "dfx canister create token && dfx generate token && dfx deploy token",
+    "presetup": "npm run deploy:token",
     "setup": "npm i && dfx canister create backend && dfx generate backend && dfx deploy",
     "sources": "mops sources",
     "start": "run-p frontend backend",

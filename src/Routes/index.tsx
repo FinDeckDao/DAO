@@ -15,6 +15,7 @@ import {
 } from "@heroicons/react/24/outline"
 import NewMember from "../Screens/Membership"
 import { Authenticate } from "../Components/Authenticate"
+import { MembersOnly } from "../Components/MembersOnly"
 
 interface NavigationItem {
   name: string
@@ -67,7 +68,9 @@ export const router = createBrowserRouter([
     element: (
       <DefaultLayout>
         <Authenticate>
-          <UserProfile />
+          <MembersOnly>
+            <UserProfile />
+          </MembersOnly>
         </Authenticate>
       </DefaultLayout >
     ),

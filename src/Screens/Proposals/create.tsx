@@ -88,7 +88,10 @@ export const CreateProposal: React.FC = () => {
         >
           {loading ? "Submitting Proposal..." : "Create Proposal"}
         </button>
-        <p>{hasKey(data, "ok") ? `${data.ok}` : null}</p>
+        <p>
+          {hasKey(data, "ok") ? `${data.ok}` : null}
+          {hasKey(data, "err") ? `${data.err}` : null}
+        </p>
       </form>
     </div>
   )

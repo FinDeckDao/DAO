@@ -1,6 +1,7 @@
 import Principal "mo:base/Principal";
 import Result "mo:base/Result";
 import Error "mo:base/Error";
+import Debug "mo:base/Debug";
 import Types "types";
 import DAOManager "modules/DaoManager/main";
 import MemberManager "modules/MemberManager/main";
@@ -132,9 +133,45 @@ actor {
   ////////////////////////////////////////////////////////////////////////
   // ✅ public shared ({ caller }) func createProposal(content : ProposalContent) : async Result<ProposalId, Text>
   public shared ({ caller }) func createProposal(content : Types.ProposalContent) : async Result.Result<Types.ProposalId, Text> {
-    let (newEntries, result) = ProposalManager.createProposal(proposalEntries, content, caller);
-    proposalEntries := newEntries;
-    result;
+    // This should burn a token from the caller
+    let burnResult = await burnToken(caller, 1);
+
+    switch (burnResult) {
+      case (#ok) {
+        let (newEntries, result) = ProposalManager.createProposal(proposalEntries, content, caller);
+        switch (result) {
+          case (#ok(proposalId)) {
+            proposalEntries := newEntries;
+            #ok(proposalId)
+          };
+          case (#err(errorMsg)) {
+            #err("Failed to create proposal: " # errorMsg)
+          };
+        };
+      };
+      case (#err(burnError)) {
+        // Burn failed, return an error
+        #err("Failed to create proposal: " # burnError)
+      };
+    };
+    
+    // let (newEntries, result) = ProposalManager.createProposal(proposalEntries, content, caller);
+    // proposalEntries := newEntries;
+    // result;
+  };
+
+  func burnToken(caller: Principal, amount: Nat) : async Result.Result<(), Text> {
+    try {
+      let result = await MBToken.burn(caller, amount);
+      switch (result) {
+        case (#ok) { #ok(()) };
+        case (#err(errorMsg)) { 
+          #err(errorMsg);
+        };
+      }
+    } catch (error) {
+      #err(Error.message(error))
+    }
   };
 
   // ✅ public query func getProposal(id : ProposalId) : async Result<Proposal, Text>

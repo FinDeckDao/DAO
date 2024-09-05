@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, FC } from 'react'
 import { Member } from '../../declarations/backend/backend.did'
 import { useQueryCall, useUpdateCall } from '@ic-reactor/react'
 import { useNavigate } from 'react-router-dom'
@@ -9,7 +9,7 @@ import { useAuthState, useUserPrincipal } from '@ic-reactor/react'
 // TODO: This component has too many responsibilities.
 //       It will work for now but it's doing too much.
 
-const NewMember: React.FC = () => {
+const NewMember: FC = () => {
   const { authenticated, identity } = useAuthState()
   const userPrincipal = useUserPrincipal()
   const [name, setName] = useState('')
