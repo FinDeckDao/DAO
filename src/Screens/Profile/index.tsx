@@ -14,7 +14,7 @@ export const UserProfile: React.FC<MembersOnlyChildComponentProps> = (props) => 
     return <div>Loading...</div>
   }
 
-  const { call, data, loading } = useQueryCall({
+  const { data, loading } = useQueryCall({
     functionName: 'getTokenBalanceFor',
     args: [principal],
   }) as { call: Function, data: number, loading: boolean }

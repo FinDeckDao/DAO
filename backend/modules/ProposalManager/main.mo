@@ -47,7 +47,13 @@ module {
   };
 
   // Allows a user to vote on a proposal
-  public func voteProposal(proposals : [(Types.ProposalId, Types.Proposal)], proposalId : Types.ProposalId, yesOrNo : Bool, caller : Principal) : ([(Types.ProposalId, Types.Proposal)], Result.Result<(), Text>) {
+  public func voteProposal(
+    proposals : [(Types.ProposalId, Types.Proposal)],
+    proposalId : Types.ProposalId,
+    yesOrNo : Bool,
+    caller : Principal,
+    votingPower : Nat,
+  ) : ([(Types.ProposalId, Types.Proposal)], Result.Result<(), Text>) {
     // Find the proposal with the matching ID
     let foundProposal = Array.find<(Types.ProposalId, Types.Proposal)>(proposals, func((id, _)) = id == proposalId);
 
@@ -67,7 +73,7 @@ module {
         // Create a new vote
         let newVote : Types.Vote = {
           member = caller;
-          votingPower = 1; // Assuming each member has 1 voting power, adjust if necessary
+          votingPower = votingPower; // Assuming each member has 1 voting power, adjust if necessary
           yesOrNo = yesOrNo;
         };
 
@@ -84,11 +90,25 @@ module {
         // Update the vote score
         let updatedVoteScore = proposal.voteScore + (if (yesOrNo) 1 else -1);
 
-        // Create an updated proposal with the new vote and score
-        let updatedProposal = {
-          proposal with
-          votes = updatedVotes;
-          voteScore = updatedVoteScore;
+        // If updatedVoteScore is > than 100 it's automatically executed.
+        var updatedProposal : Types.Proposal = proposal;
+        if (updatedVoteScore >= 100) {
+          // Create an updated proposal with the new vote and score
+          updatedProposal := {
+            proposal with
+            votes = updatedVotes;
+            voteScore = updatedVoteScore;
+            status = #Accepted; // Update the status if necessary
+          };
+        };
+
+        if (updatedVoteScore <= -100) {
+          updatedProposal := {
+            proposal with
+            votes = updatedVotes;
+            voteScore = updatedVoteScore;
+            status = #Rejected; // Update the status if necessary
+          };
         };
 
         // Create a new array of proposals with the updated proposal

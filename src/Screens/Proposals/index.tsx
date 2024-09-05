@@ -46,7 +46,7 @@ export const Proposals: FC = () => {
 
     return <>
       {proposalsData.sort((a, b) => Number(b.id) - Number(a.id)).map((proposal: Proposal) => (
-        <ProposalDetail {...proposal} />
+        <ProposalDetail key={proposal.id.toString()} {...proposal} />
       ))}
     </>
   }

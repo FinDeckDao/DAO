@@ -1,7 +1,7 @@
 import Principal "mo:base/Principal";
 import Result "mo:base/Result";
 import Error "mo:base/Error";
-import Debug "mo:base/Debug";
+// import Debug "mo:base/Debug";
 import Types "types";
 import DAOManager "modules/DaoManager/main";
 import MemberManager "modules/MemberManager/main";
@@ -12,7 +12,11 @@ import MBToken "canister:token";
 actor {
   stable var manifesto : Text = "Help new traders to become profitable and understand key concepts that increase the probability of trading and investing profitably.";
   stable var goals : [Text] = ["Learn Motoko", "Build a project", "Graduate!"];
-  stable var memberEntries : [(Principal, Types.Member)] = []; // Text is the Principal.toText() of the Principal
+
+  // Create some inital members for the Bootcamp.
+  let bootCampPrincipal = Principal.fromText("nkqop-siaaa-aaaaj-qa3qq-cai");
+  let bootCampMember: Types.Member = { name = "motoko_bootcamp"; role = #Mentor; };
+  stable var memberEntries : [(Principal, Types.Member)] = [(bootCampPrincipal, bootCampMember)];
   stable var proposalEntries : [(Types.ProposalId, Types.Proposal)] = [];
 
   ////////////////////////////////////////////////////////////////////////
@@ -131,33 +135,52 @@ actor {
   ////////////////////////////////////////////////////////////////////////
   // Section Proposals ///////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////
+  // TODO: This entire function is pretty ugly. We should refactor this to be more functional.
+  //       For now this is fine but we should come back to this and clean it up.
   // ✅ public shared ({ caller }) func createProposal(content : ProposalContent) : async Result<ProposalId, Text>
   public shared ({ caller }) func createProposal(content : Types.ProposalContent) : async Result.Result<Types.ProposalId, Text> {
-    // This should burn a token from the caller
-    let burnResult = await burnToken(caller, 1);
-
-    switch (burnResult) {
-      case (#ok) {
-        let (newEntries, result) = ProposalManager.createProposal(proposalEntries, content, caller);
-        switch (result) {
-          case (#ok(proposalId)) {
-            proposalEntries := newEntries;
-            #ok(proposalId)
+    // Check to see if the caller is a mentor.
+    // TODO: This would be much sexier if we chained these calls with a monadic bind instead of nesting these.
+    let member = await getMember(caller);
+    switch (member) {
+      case (#ok(member)) {
+        switch (member.role) {
+          case (#Mentor) {
+            // Caller is a mentor, continue
+            // This should burn a token from the caller
+            // The transaction that needs to occur where both the burning of the token and the creation of the proposal need to be atomic.
+            // This is a bit of a hacky way to do this but it should work for now.
+            let burnResult = await burnToken(caller, 1);
+            switch (burnResult) {
+              case (#ok) {
+                let (newEntries, result) = ProposalManager.createProposal(proposalEntries, content, caller);
+                switch (result) {
+                  case (#ok(proposalId)) {
+                    proposalEntries := newEntries;
+                    #ok(proposalId)
+                  };
+                  case (#err(errorMsg)) {
+                    #err("Failed to create proposal: " # errorMsg)
+                  };
+                };
+              };
+              case (#err(burnError)) {
+                // Burn failed, return an error
+                #err("Failed to create proposal: " # burnError)
+              };
+            };
           };
-          case (#err(errorMsg)) {
-            #err("Failed to create proposal: " # errorMsg)
+          case (_) {
+            // Caller is not a mentor, return an error
+            #err("Only Mentors can create proposals.")
           };
         };
       };
-      case (#err(burnError)) {
-        // Burn failed, return an error
-        #err("Failed to create proposal: " # burnError)
+      case (#err(errorMsg)) {
+        // Failed to get member, return an error
+        #err("Failed to create proposal: " # errorMsg)
       };
     };
-    
-    // let (newEntries, result) = ProposalManager.createProposal(proposalEntries, content, caller);
-    // proposalEntries := newEntries;
-    // result;
   };
 
   func burnToken(caller: Principal, amount: Nat) : async Result.Result<(), Text> {
@@ -186,8 +209,43 @@ actor {
 
   // ✅ public shared ({ caller }) func voteProposal(proposalId : ProposalId, yesOrNo : Bool) : async Result<(), Text>
   public shared ({ caller }) func voteProposal(proposalId : Types.ProposalId, yesOrNo : Bool) : async Result.Result<(), Text> {
-    let (newEntries, result) = ProposalManager.voteProposal(proposalEntries, proposalId, yesOrNo, caller);
-    proposalEntries := newEntries;
-    result;
+    // Check the voter's role.
+    let voter = await getMember(caller);
+
+    switch (voter) {
+      case (#ok(member)) {
+        switch (member.role) {
+          // Graduates and Mentors can Vote.
+          case (#Graduate or #Mentor) {
+            // Voter is allowed to vote
+
+            // Calculate the vote score by taking the members role and figuring out the multiplier.
+            let voteMultiplyer = switch(member.role) {
+              case (#Graduate) { 1 };
+              case (#Mentor) { 5 };
+              case (_) { 0 };
+            }; 
+
+            // Get the token balance of the voter
+            let holdings = await getTokenBalanceFor(caller);
+
+            // Calculate the voting power
+            let votingPower = voteMultiplyer * holdings;
+            
+            // Submit the vote
+            let (newEntries, result) = ProposalManager.voteProposal(proposalEntries, proposalId, yesOrNo, caller, votingPower);
+            proposalEntries := newEntries;
+            result
+          };
+          case (_) {
+            // Voter is not allowed to vote
+            #err("Only Graduates and Mentors can vote.")
+          };
+        }
+      };
+      case (#err(errorMsg)) {
+        #err("Failed to vote: " # errorMsg)
+      };
+    };
   };
 };
