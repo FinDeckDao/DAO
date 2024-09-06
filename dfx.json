@@ -1,36 +1,24 @@
 {
   "canisters": {
     "backend": {
-      "type": "motoko",
+      "declarations": { "node_compatibility": true },
+      "dependencies": ["token"],
       "main": "backend/main.mo",
-      "declarations": {
-        "node_compatibility": true
-      }
+      "type": "motoko"
     },
     "frontend": {
       "dependencies": ["backend"],
-      "type": "assets",
-      "source": ["dist/"]
+      "source": ["dist/"],
+      "type": "assets"
     },
     "internet_identity": {
-      "type": "custom",
-      "candid": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity.did",
-      "wasm": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity_dev.wasm.gz",
+      "type": "pull",
       "frontend": {},
-      "remote": {
-        "id": {
-          "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai"
-        }
-      }
+      "id": "rdmx6-jaaaa-aaaaa-aaadq-cai"
     },
     "token": {
-      "main": "token/main.mo",
-      "type": "motoko",
-      "remote": {
-        "id": {
-          "ic": "jaamb-mqaaa-aaaaj-qa3ka-cai"
-        }
-      }
+      "type": "pull",
+      "id": "jaamb-mqaaa-aaaaj-qa3ka-cai"
     }
   },
   "defaults": {
@@ -41,6 +29,9 @@
   "output_env_file": ".env",
   "version": 2,
   "networks": {
+    "ic": {
+      "providers": ["https://ic0.app", "https://mainnet.dfinity.network"]
+    },
     "local": {
       "bind": "127.0.0.1:8000",
       "type": "ephemeral",
