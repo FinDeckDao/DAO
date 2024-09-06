@@ -17,8 +17,13 @@
       "id": "rdmx6-jaaaa-aaaaa-aaadq-cai"
     },
     "token": {
-      "type": "pull",
-      "id": "jaamb-mqaaa-aaaaj-qa3ka-cai"
+      "main": "token/main.mo",
+      "type": "motoko",
+      "remote": {
+        "id": {
+          "ic": "jaamb-mqaaa-aaaaj-qa3ka-cai"
+        }
+      }
     }
   },
   "defaults": {
