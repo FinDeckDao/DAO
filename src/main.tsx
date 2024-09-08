@@ -13,6 +13,7 @@ import { ErrorPage } from './Components/Error'
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <AgentProvider withLocalEnv port={8000}>
+      {/* <AgentProvider> */}
       <ActorProvider idlFactory={backendIdlFactory}
         canisterId={backendCanisterId}
         errorComponent={() => (

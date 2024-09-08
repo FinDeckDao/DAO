@@ -7,9 +7,14 @@ import DAOManager "modules/DaoManager/main";
 import MemberManager "modules/MemberManager/main";
 import ProposalManager "modules/ProposalManager/main";
 import WebpageManager "modules/WebpageManager/main";
-import MBToken "canister:token";
+
+import MBToken "canister:token"; // Local
+// import MBToken "ic:jaamb-mqaaa-aaaaj-qa3ka-cai"; // Mainnet
+
+// Import he token actor correctly.
 
 actor {
+  type Result<A, B> = Result.Result<A, B>;
   stable var manifesto : Text = "Help new traders to become profitable and understand key concepts that increase the probability of trading and investing profitably.";
   stable var goals : [Text] = ["Learn Motoko", "Build a project", "Graduate!"];
 
@@ -18,6 +23,8 @@ actor {
   let bootCampMember: Types.Member = { name = "motoko_bootcamp"; role = #Mentor; };
   stable var memberEntries : [(Principal, Types.Member)] = [(bootCampPrincipal, bootCampMember)];
   stable var proposalEntries : [(Types.ProposalId, Types.Proposal)] = [];
+
+
 
   ////////////////////////////////////////////////////////////////////////
   // Section Webpage /////////////////////////////////////////////////////
@@ -52,7 +59,7 @@ actor {
   };
 
   // ✅ Might not be needed for graduation project
-  public func addGoal(goal : Text) : async Result.Result<(), Text> {
+  public func addGoal(goal : Text) : async Result<(), Text> {
     let (newGoals, result) = DAOManager.addGoal(goals, goal);
     goals := newGoals;
     result;
@@ -62,7 +69,7 @@ actor {
   // Section Members /////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////
   // ✅ public shared ({ caller }) func registerMember(member : Member) : async Result<(), Text>
-  public shared ({ caller }) func registerMember(member : Types.Member) : async Result.Result<(), Text> {
+  public shared ({ caller }) func registerMember(member : Types.Member) : async Result<(), Text> {
     let (newEntries, result) = MemberManager.registerMember(memberEntries, member, caller);
 
     switch (result) {
@@ -92,7 +99,7 @@ actor {
     };
   };
 
-  func payMember(caller: Principal, amount: Nat) : async Result.Result<(), Text> {
+  func payMember(caller: Principal, amount: Nat) : async Result<(), Text> {
     try {
       let result = await MBToken.mint(caller, amount);
       switch (result) {
@@ -113,7 +120,7 @@ actor {
   };
 
   // ✅ public query func getMember(p : Principal) : async Result<Member, Text>
-  public query func getMember(p : Principal) : async Result.Result<Types.Member, Text> {
+  public query func getMember(p : Principal) : async Result<Types.Member, Text> {
     MemberManager.getMember(memberEntries, p);
   };
 
@@ -126,7 +133,7 @@ actor {
   };
 
   // ✅ public shared ({ caller }) func graduate(student : Principal) : async Result<(), Text>  
-  public shared ({ caller }) func graduate(student : Principal) : async Result.Result<(), Text> {
+  public shared ({ caller }) func graduate(student : Principal) : async Result<(), Text> {
     let (newEntries, result) = await MemberManager.graduate(memberEntries, student, caller);
     memberEntries := newEntries;
     result;
@@ -138,7 +145,7 @@ actor {
   // TODO: This entire function is pretty ugly. We should refactor this to be more functional.
   //       For now this is fine but we should come back to this and clean it up.
   // ✅ public shared ({ caller }) func createProposal(content : ProposalContent) : async Result<ProposalId, Text>
-  public shared ({ caller }) func createProposal(content : Types.ProposalContent) : async Result.Result<Types.ProposalId, Text> {
+  public shared ({ caller }) func createProposal(content : Types.ProposalContent) : async Result<Types.ProposalId, Text> {
     // Check to see if the caller is a mentor.
     // TODO: This would be much sexier if we chained these calls with a monadic bind instead of nesting these.
     let member = await getMember(caller);
@@ -183,7 +190,7 @@ actor {
     };
   };
 
-  func burnToken(caller: Principal, amount: Nat) : async Result.Result<(), Text> {
+  func burnToken(caller: Principal, amount: Nat) : async Result<(), Text> {
     try {
       let result = await MBToken.burn(caller, amount);
       switch (result) {
@@ -198,7 +205,7 @@ actor {
   };
 
   // ✅ public query func getProposal(id : ProposalId) : async Result<Proposal, Text>
-  public query func getProposal(id : Types.ProposalId) : async Result.Result<Types.Proposal, Text> {
+  public query func getProposal(id : Types.ProposalId) : async Result<Types.Proposal, Text> {
     ProposalManager.getProposal(proposalEntries, id);
   };
 
@@ -208,7 +215,7 @@ actor {
   };
 
   // ✅ public shared ({ caller }) func voteProposal(proposalId : ProposalId, yesOrNo : Bool) : async Result<(), Text>
-  public shared ({ caller }) func voteProposal(proposalId : Types.ProposalId, yesOrNo : Bool) : async Result.Result<(), Text> {
+  public shared ({ caller }) func voteProposal(proposalId : Types.ProposalId, yesOrNo : Bool) : async Result<(), Text> {
     // Check the voter's role.
     let voter = await getMember(caller);
 

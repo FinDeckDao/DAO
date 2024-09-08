@@ -57,7 +57,9 @@ export const router = createBrowserRouter([
     element: (
       <DefaultLayout>
         <Authenticate>
-          <CreateProposal />
+          <MembersOnly>
+            <CreateProposal />
+          </MembersOnly>
         </Authenticate>
       </DefaultLayout>
     ),

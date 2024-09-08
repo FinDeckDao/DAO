@@ -12,13 +12,20 @@
       "type": "assets"
     },
     "internet_identity": {
-      "type": "pull",
-      "frontend": {},
-      "id": "rdmx6-jaaaa-aaaaa-aaadq-cai"
+      "type": "custom",
+      "candid": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity.did",
+      "wasm": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity_dev.wasm.gz",
+      "remote": {
+        "id": {
+          "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai"
+        }
+      },
+      "frontend": {}
     },
     "token": {
       "main": "token/main.mo",
       "type": "motoko",
+      "candid": "token/main.did",
       "remote": {
         "id": {
           "ic": "jaamb-mqaaa-aaaaj-qa3ka-cai"

@@ -1,7 +1,6 @@
 import { FC } from 'react'
 import iclogo from '../../assets/internet-computer-icp-logo.svg'
-import { useAuth, useAgent } from "@ic-reactor/react"
-import { ErrorPage } from '../Error'
+import { useAuth } from "@ic-reactor/react"
 
 interface LoginButtonProps {
   dark?: boolean
@@ -10,30 +9,28 @@ interface LoginButtonProps {
 export const LoginButton: FC<LoginButtonProps> = (props) => {
   const { dark } = props
   const { authenticated, identity, login, logout } = useAuth()
-  const agent = useAgent()
-
-  // Guard for missing environment vars that are required.
-  if (!process.env.FINDECK_LOCAL_II_PROVIDER || !process.env.FINDECK_REMOTE_II_PROVIDER) {
-    return <ErrorPage errorMessage='There are some environment variables we count on that are missing.' />
-  }
 
   // Guard for unauthenticated user or login error
   if (!authenticated || !identity) {
-    return <div
-      onClick={(e) => {
-        e.preventDefault()
-        login({
-          identityProvider: agent?.isLocal()
-            ? process.env.FINDECK_LOCAL_II_PROVIDER
-            : process.env.FINDECK_REMOTE_II_PROVIDER
-        })
-      }}
-      className={`-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7
+    const isLocal = window.location.hostname.includes('localhost')
+    const identityProvider = isLocal
+      ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:8000/#authorize`
+      : 'https://identity.ic0.app/#authorize'
+    return (
+      <div
+        onClick={(e) => {
+          e.preventDefault()
+          login({
+            identityProvider
+          })
+        }}
+        className={`-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7
                    text-sky-100 hover:bg-slate-700 ${dark ? 'bg-slate-800 hover:bg-slate-900' : null}`}
-    >
-      <img src={iclogo} className="h-8 w-8 inline p-0 mb-1 mr-2 align-middle" />
-      Login
-    </div>
+      >
+        <img src={iclogo} className="h-8 w-8 inline p-0 mb-1 mr-2 align-middle" />
+        Login
+      </div>
+    )
   }
 
   return <a
