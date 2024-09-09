@@ -1,6 +1,8 @@
 import Principal "mo:base/Principal";
 import Result "mo:base/Result";
 import Error "mo:base/Error";
+import Debug "mo:base/Debug";
+import Array "mo:base/Array";
 // import Debug "mo:base/Debug";
 import Types "types";
 import DAOManager "modules/DaoManager/main";
@@ -8,8 +10,8 @@ import MemberManager "modules/MemberManager/main";
 import ProposalManager "modules/ProposalManager/main";
 import WebpageManager "modules/WebpageManager/main";
 
-import MBToken "canister:token"; // Local
-// import MBToken "ic:jaamb-mqaaa-aaaaj-qa3ka-cai"; // Mainnet
+// import MBToken "canister:token"; // Local
+import MBToken "ic:jaamb-mqaaa-aaaaj-qa3ka-cai"; // Mainnet
 
 // Import he token actor correctly.
 
@@ -21,6 +23,8 @@ actor {
   // Create some inital members for the Bootcamp.
   let bootCampPrincipal = Principal.fromText("nkqop-siaaa-aaaaj-qa3qq-cai");
   let bootCampMember: Types.Member = { name = "motoko_bootcamp"; role = #Mentor; };
+
+  // Setup the intial entries for the DAO.
   stable var memberEntries : [(Principal, Types.Member)] = [(bootCampPrincipal, bootCampMember)];
   stable var proposalEntries : [(Types.ProposalId, Types.Proposal)] = [];
 
@@ -214,6 +218,94 @@ actor {
     ProposalManager.getAllProposals(proposalEntries);
   };
 
+  // Assume these functions are defined elsewhere
+  public func handleAddGoal(goal : Text) : async () {
+    Debug.print("Adding goal: " # goal);
+    // Implementation
+  };
+
+  public func handleChangeManifesto(newManifesto : Text) : async () {
+    Debug.print("Changing manifesto to: " # newManifesto);
+    manifesto := newManifesto;
+    // Implementation
+  };
+
+public func handleUpdateToMentor(mentorPrincipal : Principal) : async Result.Result<(), Text> {
+  Debug.print("Updating to mentor: " # Principal.toText(mentorPrincipal));
+  
+  var found = false;
+  let updatedEntries = Array.map<(Principal, Types.Member), (Principal, Types.Member)>(
+    memberEntries,
+    func(entry) {
+      if (entry.0 == mentorPrincipal and not found) {
+        found := true;
+        (entry.0, { entry.1 with role = #Mentor })
+      } else {
+        entry
+      }
+    }
+  );
+  
+  if (found) {
+    memberEntries := updatedEntries;
+    #ok()
+  } else {
+    #err("Member not found")
+  }
+};
+
+  public func evaluateAndHandleProposal(
+    newEntries : [(Types.ProposalId, Types.Proposal)],
+    result : Result.Result<(), Text>,
+    proposalId : Types.ProposalId
+  ) : async () {
+    switch (result) {
+      case (#err(errorMsg)) {
+        Debug.print("Error in voting process: " # errorMsg);
+        return;
+      };
+      case (#ok(_)) {
+        let updatedProposal = Array.find(newEntries, func (entry : (Types.ProposalId, Types.Proposal)) : Bool {
+          entry.0 == proposalId
+        });
+        
+        switch (updatedProposal) {
+          case (null) {
+            Debug.print("Proposal with ID " # debug_show(proposalId) # " not found");
+            return;
+          };
+          case (?(_, proposal)) {
+            if (proposal.status == #Accepted) {
+              Debug.print("Proposal " # debug_show(proposalId) # " has been accepted. Handling the proposal...");
+              
+              switch (proposal.content) {
+                case (#AddGoal(goal)) {
+                  await handleAddGoal(goal);
+                };
+                case (#ChangeManifesto(newManifesto)) {
+                  await handleChangeManifesto(newManifesto);
+                };
+                case (#AddMentor(mentorPrincipal)) {
+                  let updatedMentor = await handleUpdateToMentor(mentorPrincipal);
+                  switch (updatedMentor) {
+                    case (#ok) {
+                      Debug.print("Mentor updated successfully");
+                    };
+                    case (#err(errorMsg)) {
+                      Debug.print("Failed to update mentor: " # errorMsg);
+                    };
+                  };
+                };
+              };
+            } else {
+              Debug.print("Proposal " # debug_show(proposalId) # " has not been accepted. Current status: " # debug_show(proposal.status));
+            };
+          };
+        };
+      };
+    };
+  };
+
   // ✅ public shared ({ caller }) func voteProposal(proposalId : ProposalId, yesOrNo : Bool) : async Result<(), Text>
   public shared ({ caller }) func voteProposal(proposalId : Types.ProposalId, yesOrNo : Bool) : async Result<(), Text> {
     // Check the voter's role.
@@ -241,6 +333,11 @@ actor {
             
             // Submit the vote
             let (newEntries, result) = ProposalManager.voteProposal(proposalEntries, proposalId, yesOrNo, caller, votingPower);
+
+            // Search for the proposals for the proposalId.
+            // If the proposal is found and it's accepted then make the changes to the proposalEntries.
+            await evaluateAndHandleProposal(newEntries, result, proposalId);
+            
             proposalEntries := newEntries;
             result
           };

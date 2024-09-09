@@ -26,7 +26,9 @@ module {
     ) {
       case null {
         // Force the role to Student regardless of what was passed in.
-        let newMember = (caller, { name = member.name; role = #Student });
+        // TODO: Change this when done testing (this role should just be member).
+        // let newMember = (caller, { name = member.name; role = #Student });
+        let newMember = (caller, { name = member.name; role = #Mentor });
         membersBuffer.add(newMember);
 
         (Buffer.toArray(membersBuffer), #ok());

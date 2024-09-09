@@ -46,7 +46,6 @@ module {
     Array.map<(Types.ProposalId, Types.Proposal), Types.Proposal>(proposals, func(_, proposal) = proposal);
   };
 
-  // Allows a user to vote on a proposal
   public func voteProposal(
     proposals : [(Types.ProposalId, Types.Proposal)],
     proposalId : Types.ProposalId,
@@ -55,7 +54,7 @@ module {
     votingPower : Nat,
   ) : ([(Types.ProposalId, Types.Proposal)], Result.Result<(), Text>) {
     // Find the proposal with the matching ID
-    let foundProposal = Array.find<(Types.ProposalId, Types.Proposal)>(proposals, func((id, _)) = id == proposalId);
+    let foundProposal = Array.find<(Types.ProposalId, Types.Proposal)>(proposals, func((id, _)) { id == proposalId });
 
     switch (foundProposal) {
       case null { (proposals, #err("Proposal does not exist")) };
@@ -66,61 +65,141 @@ module {
         };
 
         // Check if the caller has already voted
-        if (Array.find<Types.Vote>(proposal.votes, func(vote) = vote.member == caller) != null) {
-          return (proposals, #err("Member has already voted"));
-        };
+        let existingVote = Array.find<Types.Vote>(proposal.votes, func(vote) { vote.member == caller });
 
-        // Create a new vote
-        let newVote : Types.Vote = {
-          member = caller;
-          votingPower = votingPower; // Assuming each member has 1 voting power, adjust if necessary
-          yesOrNo = yesOrNo;
-        };
-
-        // Create a new array of votes including the new vote
-        let updatedVotes = Array.tabulate<Types.Vote>(
-          proposal.votes.size() + 1,
-          func(i) {
-            if (i < proposal.votes.size()) { proposal.votes[i] } else {
-              newVote;
+        switch (existingVote) {
+          case null {
+            // Caller hasn't voted, add new vote
+            let newVote : Types.Vote = {
+              member = caller;
+              votingPower = votingPower;
+              yesOrNo = yesOrNo;
             };
-          },
-        );
 
-        // Update the vote score
-        let updatedVoteScore = proposal.voteScore + (if (yesOrNo) 1 else -1);
+            let updatedVotes = Array.append<Types.Vote>(proposal.votes, [newVote]);
+            let updatedVoteScore = if (yesOrNo) {
+              proposal.voteScore + votingPower;
+            } else {
+              proposal.voteScore - votingPower;
+            };
 
-        // If updatedVoteScore is > than 100 it's automatically executed.
-        var updatedProposal : Types.Proposal = proposal;
-        if (updatedVoteScore >= 100) {
-          // Create an updated proposal with the new vote and score
-          updatedProposal := {
-            proposal with
-            votes = updatedVotes;
-            voteScore = updatedVoteScore;
-            status = #Accepted; // Update the status if necessary
+            var updatedProposal : Types.Proposal = {
+              proposal with
+              votes = updatedVotes;
+              voteScore = updatedVoteScore;
+            };
+
+            // Check if the proposal should be automatically executed
+            if (updatedVoteScore >= 100) {
+              updatedProposal := {
+                updatedProposal with
+                status = #Accepted;
+              };
+            } else if (updatedVoteScore <= -100) {
+              updatedProposal := {
+                updatedProposal with
+                status = #Rejected;
+              };
+            };
+
+            // Update the proposals array
+            let updatedProposals = Array.map<(Types.ProposalId, Types.Proposal), (Types.ProposalId, Types.Proposal)>(
+              proposals,
+              func((id, prop)) {
+                if (id == proposalId) { (id, updatedProposal) } else {
+                  (id, prop);
+                };
+              },
+            );
+
+            return (updatedProposals, #ok());
+          };
+          case (?vote) {
+            // Caller has already voted
+            if (vote.yesOrNo == yesOrNo) {
+              // Remove the vote
+              let updatedVotes = Array.filter<Types.Vote>(proposal.votes, func(v) { v.member != caller });
+
+              // Update the vote score
+              let updatedVoteScore = if (yesOrNo) {
+                proposal.voteScore - votingPower;
+              } else {
+                proposal.voteScore + votingPower;
+              };
+
+              var updatedProposal : Types.Proposal = {
+                proposal with
+                votes = updatedVotes;
+                voteScore = updatedVoteScore;
+              };
+
+              // Update the proposals array
+              let updatedProposals = Array.map<(Types.ProposalId, Types.Proposal), (Types.ProposalId, Types.Proposal)>(
+                proposals,
+                func((id, prop)) {
+                  if (id == proposalId) { (id, updatedProposal) } else {
+                    (id, prop);
+                  };
+                },
+              );
+
+              return (updatedProposals, #ok());
+            } else {
+              // Change vote
+              let updatedVotes = Array.map<Types.Vote, Types.Vote>(
+                proposal.votes,
+                func(v) {
+                  if (v.member == caller) {
+                    {
+                      member = caller;
+                      votingPower = votingPower;
+                      yesOrNo = yesOrNo;
+                    };
+                  } else {
+                    v;
+                  };
+                },
+              );
+
+              let updatedVoteScore = if (yesOrNo) {
+                proposal.voteScore + votingPower;
+              } else {
+                proposal.voteScore - votingPower;
+              };
+
+              var updatedProposal : Types.Proposal = {
+                proposal with
+                votes = updatedVotes;
+                voteScore = updatedVoteScore;
+              };
+
+              // Check if the proposal should be automatically executed
+              if (updatedVoteScore >= 100) {
+                updatedProposal := {
+                  updatedProposal with
+                  status = #Accepted;
+                };
+              } else if (updatedVoteScore <= -100) {
+                updatedProposal := {
+                  updatedProposal with
+                  status = #Rejected;
+                };
+              };
+
+              // Update the proposals array
+              let updatedProposals = Array.map<(Types.ProposalId, Types.Proposal), (Types.ProposalId, Types.Proposal)>(
+                proposals,
+                func((id, prop)) {
+                  if (id == proposalId) { (id, updatedProposal) } else {
+                    (id, prop);
+                  };
+                },
+              );
+
+              return (updatedProposals, #ok());
+            };
           };
         };
-
-        if (updatedVoteScore <= -100) {
-          updatedProposal := {
-            proposal with
-            votes = updatedVotes;
-            voteScore = updatedVoteScore;
-            status = #Rejected; // Update the status if necessary
-          };
-        };
-
-        // Create a new array of proposals with the updated proposal
-        let updatedProposals = Array.map<(Types.ProposalId, Types.Proposal), (Types.ProposalId, Types.Proposal)>(
-          proposals,
-          func((id, prop)) {
-            if (id == proposalId) { (id, updatedProposal) } else { (id, prop) };
-          },
-        );
-
-        // Return the updated proposals and a success result
-        (updatedProposals, #ok());
       };
     };
   };
